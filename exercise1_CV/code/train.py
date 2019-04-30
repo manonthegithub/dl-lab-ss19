@@ -38,8 +38,10 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, snapshot_path, log_eve
                   take_snapshots_every_batches=None):
     if is_train:
         print("Training")
+        model.train()
     else:
         print("Validating")
+        model.eval()
     mpjpe = 0.0
     mpjpe_mean = 0.0
     for batch_id, (imgs, kps, vs) in enumerate(loader):
@@ -83,7 +85,6 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, epochs, snapshot_
     test_mpjpe = []
     val_mpjpe = []
     for eps in range(epochs):
-        model.train()
         test_err = process_epoch(
             model=model,
             optimizer=optimizer,
@@ -94,7 +95,6 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, epochs, snapshot_
             take_snapshots_every_batches=take_snapshots_every_batches,
             log_every_batches=log_every_batches,
             is_train=True)
-        model.eval()
         val_err = process_epoch(
             model=model,
             optimizer=optimizer,
