@@ -8,6 +8,11 @@ import os
 SNAPSHOT_FILENAME = 'trained_net.model'
 PATH_TO_SNAPSHOT = './' + SNAPSHOT_FILENAME
 
+VAL_MPJPE_STATE_FN = 'validation_mpjpe_state'
+TRAIN_MPJPE_STATE_FN = 'train_mpjpe_state'
+
+RW = os.R_OK + os.W_OK
+
 if torch.cuda.device_count() > 0:
     DEVICE = 'cuda'
 else:
@@ -16,7 +21,7 @@ else:
 device = torch.device(DEVICE)
 
 take_snapshots_every_epochs = 1
-log_every_batches = 100
+log_every_batches = 40
 
 epochs = 1
 batch_size = 25
@@ -24,7 +29,7 @@ learning_rate = 1e-4
 
 
 def create_model(file):
-    if os.access(file, os.X_OK):
+    if os.access(file, RW):
         model = ResNetModel(pretrained=True)
         model.load_state_dict(torch.load(file, map_location=DEVICE))
         print("Snapshot from " + file + " was successfully loaded.")
@@ -78,12 +83,10 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, log_every_batches, is_
 
     return mpjpe / batches
 
-VAL_MPJPE_STATE_FN = 'validation_mpjpe_state'
-TRAIN_MPJPE_STATE_FN = 'train_mpjpe_state'
-
 def load_mpjpe_state():
     print("Trying to load MPJPE state.")
-    if os.access(VAL_MPJPE_STATE_FN, os.X_OK) and os.access(TRAIN_MPJPE_STATE_FN, os.X_OK):
+
+    if os.access(VAL_MPJPE_STATE_FN, RW) and os.access(TRAIN_MPJPE_STATE_FN, RW):
         vals = torch.load(VAL_MPJPE_STATE_FN)
         train = torch.load(TRAIN_MPJPE_STATE_FN)
         print("Successfully loaded state.")
