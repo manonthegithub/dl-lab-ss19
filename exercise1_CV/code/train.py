@@ -90,7 +90,7 @@ def load_mpjpe_state():
 
 
 def train(model, optimizer, loss_fn, train_loader, val_loader, conf):
-    train_mpjpe ,val_mpjpe = load_mpjpe_state()
+    val_mpjpe, train_mpjpe = load_mpjpe_state()
 
     for eps in range(conf.epochs):
         train_err = process_epoch(
@@ -181,7 +181,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=conf.learning_rate)
     loss_fn = torch.nn.MSELoss(reduction='none')
 
-    (train_mpjpe, val_mpjpe) = train(model=model,
+    train_mpjpe, val_mpjpe = train(model=model,
                                     optimizer=optimizer,
                                     loss_fn=loss_fn,
                                     train_loader=train_loader,
