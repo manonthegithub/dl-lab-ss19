@@ -16,10 +16,10 @@ else:
 device = torch.device(DEVICE)
 
 take_snapshots_every_epochs = 1
-log_every_batches = 20
+log_every_batches = 100
 
 epochs = 1
-batch_size = 50
+batch_size = 25
 learning_rate = 1e-4
 
 
