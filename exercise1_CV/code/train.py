@@ -8,7 +8,7 @@ import os
 SNAPSHOT_FILENAME = 'trained_net.model'
 PATH_TO_SNAPSHOT = './' + SNAPSHOT_FILENAME
 
-if torch.cuda.device_count() > 1:
+if torch.cuda.device_count() > 0:
     DEVICE = 'cuda'
 else:
     DEVICE = 'cpu'
