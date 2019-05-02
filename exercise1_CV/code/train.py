@@ -43,6 +43,7 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, log_every_batches, is_
     else:
         print("Validating")
         model.eval()
+        torch.no_grad()
     mpjpe = 0.0
     mpjpe_mean = 0.0
     batches = 0
