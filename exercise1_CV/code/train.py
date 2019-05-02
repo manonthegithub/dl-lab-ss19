@@ -32,6 +32,7 @@ def create_model(file):
         print("There is no access to the snapshot file: " + file)
         print("Initializing new model.")
         model = ResNetModel(pretrained=False)
+    model.to(device)
     return model
 
 
