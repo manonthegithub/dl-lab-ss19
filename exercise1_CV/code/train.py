@@ -19,6 +19,7 @@ else:
 
 device = torch.device(DEVICE)
 
+
 def create_model(file):
     if os.access(file, RW):
         model = ResNetModel(pretrained=True)
