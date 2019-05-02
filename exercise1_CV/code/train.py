@@ -114,11 +114,11 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, conf):
 
         if (conf.take_snapshots_every_epochs is not None) and (
                 eps % conf.take_snapshots_every_epochs == (conf.take_snapshots_every_epochs - 1)):
-            print("Taking snapshot and saving to: " + conf.snapshot_path)
-            torch.save(model.state_dict(), conf.snapshot_path)
+            print("Taking snapshot and saving to: " + conf.path_to_snapshot)
+            torch.save(model.state_dict(), conf.path_to_snapshot)
             torch.save(train_mpjpe, TRAIN_MPJPE_STATE_FN)
             torch.save(val_mpjpe, VAL_MPJPE_STATE_FN)
-            print("Snapshot was successfully saved to: " + conf.snapshot_path)
+            print("Snapshot was successfully saved to: " + conf.path_to_snapshot)
 
     print("Finished training.")
     return train_mpjpe, val_mpjpe
