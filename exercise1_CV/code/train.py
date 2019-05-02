@@ -3,11 +3,10 @@ from model.data import get_data_loader
 from model.model import ResNetModel
 import matplotlib.pyplot as plt
 from torch.nn import functional as F
+import json
 import os
 
 SNAPSHOT_FILENAME = 'trained_net.model'
-PATH_TO_SNAPSHOT = './' + SNAPSHOT_FILENAME
-
 VAL_MPJPE_STATE_FN = 'validation_mpjpe_state'
 TRAIN_MPJPE_STATE_FN = 'train_mpjpe_state'
 
@@ -19,14 +18,6 @@ else:
     DEVICE = 'cpu'
 
 device = torch.device(DEVICE)
-
-take_snapshots_every_epochs = 1
-log_every_batches = 40
-
-epochs = 1
-batch_size = 25
-learning_rate = 1e-4
-
 
 def create_model(file):
     if os.access(file, RW):
@@ -41,7 +32,7 @@ def create_model(file):
     return model
 
 
-def process_epoch(model, optimizer, loss_fn, loader, eps, log_every_batches, is_train):
+def process_epoch(model, optimizer, loss_fn, loader, eps, conf, is_train):
     if is_train:
         print("Training")
         model.train()
@@ -70,11 +61,11 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, log_every_batches, is_
             optimizer.step()
 
         ### data specific code
-        loss = (loss.view(batch_size, 2, -1).sum(dim=1).sqrt().sum(dim=1) / vs).mean()
+        loss = (loss.view(conf.batch_size, 2, -1).sum(dim=1).sqrt().sum(dim=1) / vs).mean()
         mpjpe_mean += loss.item()
 
-        if batch_id % log_every_batches == (log_every_batches - 1):
-            mn = mpjpe_mean / log_every_batches
+        if batch_id % conf.log_every_batches == (conf.log_every_batches - 1):
+            mn = mpjpe_mean / conf.log_every_batches
             mpjpe += mpjpe_mean
             print('[%d, %5d] loss: %.3f' % (eps + 1, batch_id + 1, mn))
             mpjpe_mean = 0.0
@@ -82,6 +73,7 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, log_every_batches, is_
         ### data specific code
 
     return mpjpe / batches
+
 
 def load_mpjpe_state():
     print("Trying to load MPJPE state.")
@@ -96,18 +88,17 @@ def load_mpjpe_state():
         return [],[]
 
 
-def train(model, optimizer, loss_fn, train_loader, val_loader, epochs, snapshot_path, take_snapshots_every_epochs,
-          log_every_batches):
+def train(model, optimizer, loss_fn, train_loader, val_loader, conf):
     train_mpjpe ,val_mpjpe = load_mpjpe_state()
 
-    for eps in range(epochs):
+    for eps in range(conf.epochs):
         train_err = process_epoch(
             model=model,
             optimizer=optimizer,
             loss_fn=loss_fn,
             loader=train_loader,
             eps=eps,
-            log_every_batches=log_every_batches,
+            conf=conf,
             is_train=True)
         val_err = process_epoch(
             model=model,
@@ -115,18 +106,18 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, epochs, snapshot_
             loss_fn=loss_fn,
             loader=val_loader,
             eps=eps,
-            log_every_batches=log_every_batches,
+            conf=conf,
             is_train=False)
         train_mpjpe.append(train_err)
         val_mpjpe.append(val_err)
 
-        if (take_snapshots_every_epochs is not None) and (
-                eps % take_snapshots_every_epochs == (take_snapshots_every_epochs - 1)):
-            print("Taking snapshot and saving to: " + snapshot_path)
-            torch.save(model.state_dict(), snapshot_path)
+        if (conf.take_snapshots_every_epochs is not None) and (
+                eps % conf.take_snapshots_every_epochs == (conf.take_snapshots_every_epochs - 1)):
+            print("Taking snapshot and saving to: " + conf.snapshot_path)
+            torch.save(model.state_dict(), conf.snapshot_path)
             torch.save(train_mpjpe, TRAIN_MPJPE_STATE_FN)
             torch.save(val_mpjpe, VAL_MPJPE_STATE_FN)
-            print("Snapshot was successfully saved to: " + snapshot_path)
+            print("Snapshot was successfully saved to: " + conf.snapshot_path)
 
     print("Finished training.")
     return train_mpjpe, val_mpjpe
@@ -142,13 +133,51 @@ def plot(train, val):
     plt.savefig('task1.png', format='png')
 
 
+def load_conf(conf):
+    cfn = 'app.conf'
+    if os.access(cfn, os.R_OK):
+        conf_j = json.load(open(cfn, 'r'))
+        if 'path_to_snapshot' in conf_j:
+            conf.path_to_snapshot = conf_j['path_to_snapshot'] + SNAPSHOT_FILENAME
+        if 'take_snapshots_every_epochs' in conf_j:
+            conf.take_snapshots_every_epochs = conf_j['take_snapshots_every_epochs']
+        if 'log_every_batches' in conf_j:
+            conf.log_every_batches = conf_j['log_every_batches']
+        if 'epochs' in conf_j:
+            conf.epochs = conf_j['epochs']
+        if 'batch_size' in conf_j:
+            conf.batch_size = conf_j['batch_size']
+        if 'learning_rate' in conf_j:
+            conf.learning_rate = conf_j['learning_rate']
+        print('Successfully loaded configuration.')
+    else:
+        print('Can not read config file ' + cfn)
+        print('Using default configuration')
+    attrs = vars(conf)
+    print(', \n'.join("%s: %s" % item for item in attrs.items()))
+
+
+class Conf:
+    def __init__(self):
+        self.take_snapshots_every_epochs = 1
+        self.log_every_batches = 40
+        self.epochs = 1
+        self.batch_size = 25
+        self.learning_rate = 1e-4
+        self.path_to_snapshot = './' + SNAPSHOT_FILENAME
+
+
 if __name__ == '__main__':
+
+    conf = Conf()
+    load_conf(conf)
     print('Using:' + DEVICE)
-    print('Trying to load model snapshot from: ' + PATH_TO_SNAPSHOT)
-    model = create_model(PATH_TO_SNAPSHOT)
-    train_loader = get_data_loader(batch_size=batch_size, is_train=True, single_sample=False)
-    val_loader = get_data_loader(batch_size=batch_size, is_train=False, single_sample=False)
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    print('Trying to load model snapshot from: ' + conf.path_to_snapshot)
+    model = create_model(conf.path_to_snapshot)
+
+    train_loader = get_data_loader(batch_size=conf.batch_size, is_train=True, single_sample=False)
+    val_loader = get_data_loader(batch_size=conf.batch_size, is_train=False, single_sample=False)
+    optimizer = torch.optim.Adam(model.parameters(), lr=conf.learning_rate)
     loss_fn = torch.nn.MSELoss(reduction='none')
 
     (train_mpjpe, val_mpjpe) = train(model=model,
@@ -156,9 +185,6 @@ if __name__ == '__main__':
                                     loss_fn=loss_fn,
                                     train_loader=train_loader,
                                     val_loader=val_loader,
-                                    epochs=epochs,
-                                    take_snapshots_every_epochs=take_snapshots_every_epochs,
-                                    snapshot_path=PATH_TO_SNAPSHOT,
-                                    log_every_batches=log_every_batches)
+                                    conf=conf)
 
     plot(train_mpjpe, val_mpjpe)
