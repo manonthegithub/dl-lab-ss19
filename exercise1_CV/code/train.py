@@ -50,7 +50,7 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, log_every_batches, is_
     for batch_id, (imgs, kps, vs) in enumerate(loader):
         imgs = imgs.to(device)
         kps = kps.to(device)
-        vs = vs.to(device)
+        vs = vs.to(device).float().sum(dim=1)
 
         optimizer.zero_grad()
         pred = model.forward(imgs, '')
@@ -58,15 +58,15 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, log_every_batches, is_
 
         if is_train:
             if loss.dim() > 1:
-                loss.sum(dim=1).mean().backward()
+                loss_n = loss.sum(dim=1).mean()
             else:
-                loss.mean().backward()
+                loss_n = loss.mean()
+            loss_n.backward()
             optimizer.step()
 
         ### data specific code
-        mpjpe_batch_mean = (loss.view(batch_size, 2, -1).sum(dim=1).sqrt().sum(dim=1) / vs.float().sum(dim=1)).mean()
-
-        mpjpe_mean += mpjpe_batch_mean.item()
+        loss = (loss.view(batch_size, 2, -1).sum(dim=1).sqrt().sum(dim=1) / vs).mean()
+        mpjpe_mean += loss.item()
 
         if batch_id % log_every_batches == (log_every_batches - 1):
             mn = mpjpe_mean / log_every_batches
