@@ -67,15 +67,14 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, conf, is_train):
         if is_train:
             loss.backward()
             optimizer.step()
-        mpjpe_mean += loss.item()
-
-
+        loss_d = loss.item()
+        mpjpe_mean += loss_d
+        mpjpe += loss_d
+        batches += 1
         if batch_id % conf.log_every_batches == (conf.log_every_batches - 1):
             mn = mpjpe_mean / conf.log_every_batches
-            mpjpe += mpjpe_mean
-            print('[%d, %5d] loss: %.3f' % (eps + 1, batch_id + 1, mn))
+            print('[%d, %5d] batch mean loss: %.3f, epoch mean: %.3f' % (eps + 1, batch_id + 1, mn, mpjpe / batches))
             mpjpe_mean = 0.0
-        batches += 1
         ### data specific code
 
     return mpjpe / batches
@@ -123,6 +122,7 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, conf):
             torch.save(model.state_dict(), conf.path_to_snapshot)
             torch.save(train_mpjpe, TRAIN_MPJPE_STATE_FN)
             torch.save(val_mpjpe, VAL_MPJPE_STATE_FN)
+            plot(train_mpjpe, val_mpjpe)
             print("Snapshot was successfully saved to: " + conf.path_to_snapshot)
 
     print("Finished training.")
@@ -130,13 +130,15 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, conf):
 
 
 def plot(train, val):
+    fn = 'task1.png'
     plt.plot(train)
     plt.plot(val)
     plt.legend(['train MPJPE', 'validation MPJPE'], loc='best')
     plt.title('Task1. MPJPE for train and validation sets over epochs.')
     plt.xlabel('epochs')
     plt.ylabel('MPJPE')
-    plt.savefig('task1.png', format='png')
+    print('Saving error graph in ' + fn)
+    plt.savefig(fn, format='png')
 
 
 def load_conf(conf):
@@ -192,5 +194,3 @@ if __name__ == '__main__':
                                     train_loader=train_loader,
                                     val_loader=val_loader,
                                     conf=conf)
-
-    plot(train_mpjpe, val_mpjpe)
