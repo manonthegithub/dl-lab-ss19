@@ -52,8 +52,8 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, conf, is_train):
         optimizer.zero_grad()
         pred = model.forward(imgs, '')
         loss = loss_fn(pred, kps).view(conf.batch_size, -1, 2)
-        lv = loss * vs.unsqueeze(2)
-        lv = lv.sum()
+        loss = loss * vs.unsqueeze(2)
+        lv = loss.sum()
 
         if is_train:
             lv.backward()
