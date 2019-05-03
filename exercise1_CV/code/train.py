@@ -52,29 +52,23 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, conf, is_train):
         optimizer.zero_grad()
         pred = model.forward(imgs, '')
         loss = loss_fn(pred, kps)
+        lv = loss.sum()
 
-        # if is_train:
-        #     if loss.dim() > 1:
-        #         loss_n = loss.sum(dim=1).mean()
-        #     else:
-        #         loss_n = loss.mean()
-        #     loss_n.backward()
-        #     optimizer.step()
+        if is_train:
+            lv.backward()
+            optimizer.step()
 
         ### data specific code
         loss = (loss.view(conf.batch_size, 2, -1).sum(dim=1).sqrt().sum(dim=1) / vs).mean()
 
-        if is_train:
-            loss.backward()
-            optimizer.step()
         loss_d = loss.item()
         mpjpe_mean += loss_d
         mpjpe += loss_d
         batches += 1
         if (batches - 1) % conf.log_every_batches == (conf.log_every_batches - 1):
             mn = mpjpe_mean / conf.log_every_batches
-            print('[%d, %5d, %5d] batch mean loss: %.3f, epoch mean: %.3f' %
-                  (eps + 1, batches, batches * conf.batch_size, mn, mpjpe / batches))
+            print('[%d, %5d, %5d] l2 loss: %.3f' % (eps + 1, batches, batches * conf.batch_size, lv.item()))
+            print('mpjpe batch mean: %.3f, epoch mean: %.3f' % (mn, mpjpe / batches))
             mpjpe_mean = 0.0
         ### data specific code
 
