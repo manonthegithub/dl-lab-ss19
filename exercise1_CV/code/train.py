@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from torch.nn import functional as F
 import json
 import os
+import sys
 
 SNAPSHOT_FILENAME = 'trained_net.model'
 VAL_MPJPE_STATE_FN = 'validation_mpjpe_state'
@@ -125,13 +126,14 @@ def train(model, optimizer, loss_fn, train_loader, val_loader, conf):
 
 def plot(train, val):
     fn = 'task1.png'
-    plt.plot(train)
-    plt.plot(val)
-    plt.legend(['train MPJPE', 'validation MPJPE'], loc='best')
+    plt.plot(train, label='train MPJPE')
+    plt.plot(val, label='validation MPJPE')
+    plt.ylim(bottom=0)
+    plt.legend(loc='best')
     plt.title('Task1. MPJPE for train and validation sets over epochs.')
     plt.xlabel('epochs')
     plt.ylabel('MPJPE')
-    print('Saving error graph in ' + fn)
+    print('Saving loss graph in ' + fn)
     plt.savefig(fn, format='png')
 
 
@@ -170,21 +172,26 @@ class Conf:
 
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+        if arg == 'plot':
+            val, train = load_mpjpe_state()
+            plot(train, val)
+    else:
+        conf = Conf()
+        load_conf(conf)
+        print('Using:' + DEVICE)
+        print('Trying to load model snapshot from: ' + conf.path_to_snapshot)
+        model = create_model(conf.path_to_snapshot)
 
-    conf = Conf()
-    load_conf(conf)
-    print('Using:' + DEVICE)
-    print('Trying to load model snapshot from: ' + conf.path_to_snapshot)
-    model = create_model(conf.path_to_snapshot)
+        train_loader = get_data_loader(batch_size=conf.batch_size, is_train=True, single_sample=False)
+        val_loader = get_data_loader(batch_size=conf.batch_size, is_train=False, single_sample=False)
+        optimizer = torch.optim.Adam(model.parameters(), lr=conf.learning_rate)
+        loss_fn = torch.nn.MSELoss(reduction='none')
 
-    train_loader = get_data_loader(batch_size=conf.batch_size, is_train=True, single_sample=False)
-    val_loader = get_data_loader(batch_size=conf.batch_size, is_train=False, single_sample=False)
-    optimizer = torch.optim.Adam(model.parameters(), lr=conf.learning_rate)
-    loss_fn = torch.nn.MSELoss(reduction='none')
-
-    train_mpjpe, val_mpjpe = train(model=model,
-                                    optimizer=optimizer,
-                                    loss_fn=loss_fn,
-                                    train_loader=train_loader,
-                                    val_loader=val_loader,
-                                    conf=conf)
+        train_mpjpe, val_mpjpe = train(model=model,
+                                        optimizer=optimizer,
+                                        loss_fn=loss_fn,
+                                        train_loader=train_loader,
+                                        val_loader=val_loader,
+                                        conf=conf)
