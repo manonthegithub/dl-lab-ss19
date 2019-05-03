@@ -44,7 +44,7 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, conf, is_train):
     mpjpe = 0.0
     mpjpe_mean = 0.0
     batches = 0
-    for batch_id, (imgs, kps, vs) in enumerate(loader):
+    for imgs, kps, vs in loader:
         imgs = imgs.to(device)
         kps = kps.to(device)
         vs = vs.to(device).float().sum(dim=1)
@@ -71,9 +71,10 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, conf, is_train):
         mpjpe_mean += loss_d
         mpjpe += loss_d
         batches += 1
-        if batch_id % conf.log_every_batches == (conf.log_every_batches - 1):
+        if (batches - 1) % conf.log_every_batches == (conf.log_every_batches - 1):
             mn = mpjpe_mean / conf.log_every_batches
-            print('[%d, %5d] batch mean loss: %.3f, epoch mean: %.3f' % (eps + 1, batch_id + 1, mn, mpjpe / batches))
+            print('[%d, %5d, %5d] batch mean loss: %.3f, epoch mean: %.3f' %
+                  (eps + 1, batches, batches * conf.batch_size, mn, mpjpe / batches))
             mpjpe_mean = 0.0
         ### data specific code
 
