@@ -23,13 +23,13 @@ device = torch.device(DEVICE)
 
 def create_model(file):
     if os.access(file, RW):
-        model = ResNetModel(pretrained=True)
+        model = ResNetModel(pretrained=False)
         model.load_state_dict(torch.load(file, map_location=DEVICE))
         print("Snapshot from " + file + " was successfully loaded.")
     else:
         print("There is no access to the snapshot file: " + file)
         print("Initializing new model.")
-        model = ResNetModel(pretrained=False)
+        model = ResNetModel(pretrained=True)
     model.to(device)
     return model
 
@@ -135,6 +135,7 @@ def plot(train, val):
     plt.ylabel('MPJPE')
     print('Saving loss graph in ' + fn)
     plt.savefig(fn, format='png')
+    plt.close()
 
 
 def load_conf(conf):
