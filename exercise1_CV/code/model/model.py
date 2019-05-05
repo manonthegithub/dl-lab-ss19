@@ -24,14 +24,14 @@ class ResNetConv(ResNet):
 class SoftArgmax(nn.Module):
     def __init__(self):
         super().__init__()
-        self.rws = torch.arange(0, 256).float().unsqueeze(1)
-        self.cls = torch.arange(0, 256).float().unsqueeze(0)
+        self.register_buffer('rws', torch.arange(0, 256).float().unsqueeze(1))
+        self.register_buffer('cls', torch.arange(0, 256).float().unsqueeze(0))
 
 
     def forward(self, input):
         l = F.softmax(input.view((input.shape[0], input.shape[1], -1)), dim=2).view(input.shape)
-        xs = ((l * self.rws).sum(dim=(2, 3))).unsqueeze(2)
-        ys = ((l * self.cls).sum(dim=(2, 3))).unsqueeze(2)
+        xs = ((l * self.state_dict()['rws']).sum(dim=(2, 3))).unsqueeze(2)
+        ys = ((l * self.state_dict()['cls']).sum(dim=(2, 3))).unsqueeze(2)
         l = torch.cat((xs, ys), dim=2).view(input.shape[0], -1)
         return l
 
