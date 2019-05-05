@@ -6,7 +6,7 @@ import torch.utils.model_zoo as model_zoo
 from torchvision.models.resnet import ResNet, BasicBlock, model_urls
 
 
-class ResNetConv(ResNet):    
+class ResNetConv(ResNet):
     def forward(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
@@ -22,15 +22,16 @@ class ResNetConv(ResNet):
 
 
 class SoftArgmax(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.rws = torch.arange(0, 256).float().unsqueeze(1)
+        self.cls = torch.arange(0, 256).float().unsqueeze(0)
+
 
     def forward(self, input):
         l = F.softmax(input.view((input.shape[0], input.shape[1], -1)), dim=2).view(input.shape)
-        h = input.shape[2]
-        w = input.shape[3]
-        rws = torch.arange(0, h).float().unsqueeze(1)
-        cls = torch.arange(0, w).float().unsqueeze(0)
-        xs = ((l * rws).sum(dim=(2,3))).unsqueeze(2)
-        ys = ((l * cls).sum(dim=(2,3))).unsqueeze(2)
+        xs = ((l * self.rws).sum(dim=(2, 3))).unsqueeze(2)
+        ys = ((l * self.cls).sum(dim=(2, 3))).unsqueeze(2)
         l = torch.cat((xs, ys), dim=2).view(input.shape[0], -1)
         return l
 
@@ -53,13 +54,74 @@ class SoftResNetModel(nn.Module):
         return x
 
 
+class TransUpsampling(nn.Module):
+    def __init__(self, in_channels, out_channels, stride, kernel_size, padding):
+        super().__init__()
+        self.ups = nn.ConvTranspose2d(in_channels=in_channels, out_channels=out_channels, stride=stride,
+                                      kernel_size=kernel_size, padding=padding)
+        self.bn = nn.BatchNorm2d(num_features=out_channels)
+        self.rl = nn.ReLU()
+
+    def forward(self, input, skip=None):
+        if skip is not None:
+            input = input.cat(skip, dim=0)
+        x = self.ups(input)
+        x = self.bn(x)
+        x = self.rl(x)
+        return x
+
+class SingleUpsampling(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
+        self.l1 = TransUpsampling(in_channels=256, out_channels=3, stride=17, kernel_size=3, padding=1)
+
+    def forward(self, inputs, filename):
+        x, _ = self.res_conv(inputs)
+        x = self.l1(x)
+        return x
+
+
+class TripleUpsampling(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
+        self.l1 = TransUpsampling(in_channels=256, out_channels=64, stride=7, kernel_size=3, padding=1)
+        self.l2 = TransUpsampling(in_channels=64, out_channels=16, stride=6, kernel_size=3, padding=1)
+        self.l3 = TransUpsampling(in_channels=16, out_channels=3, stride=6, kernel_size=3, padding=1)
+
+    def forward(self, inputs, filename):
+        x, _ = self.res_conv(inputs)
+        x = self.l1(x)
+        x = self.l2(x)
+        x = self.l3(x)
+        return x
+
+class TripleUpsamplingSkip(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
+        self.l1 = TransUpsampling(in_channels=512, out_channels=64, stride=6, kernel_size=3, padding=1)
+        self.l2 = TransUpsampling(in_channels=128, out_channels=16, stride=4, kernel_size=3, padding=1)
+        self.l3 = TransUpsampling(in_channels=32, out_channels=8, stride=4, kernel_size=3, padding=1)
+        self.l4 = TransUpsampling(in_channels=8, out_channels=3, stride=5, kernel_size=3, padding=1)
+
+    def forward(self, inputs, filename):
+        x, skips = self.res_conv(inputs)
+        x = self.l1(x, skips[2])
+        x = self.l2(x, skips[1])
+        x = self.l3(x, skips[0])
+        x = self.l4(x)
+        return x
+
+
 class ResNetModel(nn.Module):
     def __init__(self, pretrained):
         super().__init__()
 
         # base network
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
-        
+
         # other network modules
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc1 = nn.Linear(256, 512)
@@ -69,7 +131,7 @@ class ResNetModel(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform_(m.weight)
-        
+
         if pretrained:
             self.res_conv.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
 
