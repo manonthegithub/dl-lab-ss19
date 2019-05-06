@@ -41,7 +41,7 @@ class SoftResNetModel(nn.Module):
     def __init__(self, pretrained):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
-        self.avgpool = nn.AdaptiveAvgPool3d((17, 256, 256))
+        self.avgpool = nn.ConvTranspose2d(in_channels=256, out_channels=17, stride=17, kernel_size=3, padding=1)
         self.argm = SoftArgmax()
 
         if pretrained:
