@@ -74,12 +74,14 @@ class SingleUpsampling(nn.Module):
     def __init__(self):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
-        self.l1 = TransUpsampling(in_channels=256, out_channels=1, stride=17, kernel_size=3, padding=1)
+        self.l1 = nn.Conv2d(in_channels=256, out_channels=1, kernel_size=1)
+        self.l2 = nn.Upsample((256, 256))
         self.sgn = nn.Sigmoid()
 
     def forward(self, inputs, filename=''):
         x, _ = self.res_conv(inputs)
         x = self.l1(x)
+        x = self.l2(x)
         x = self.sgn(x)
         return x.squeeze(1)
 
