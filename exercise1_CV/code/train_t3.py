@@ -198,6 +198,7 @@ if __name__ == '__main__':
             print('Using:' + DEVICE)
             print('Trying to load model snapshot from: ' + conf.path_to_snapshot)
             model = create_model(conf.path_to_snapshot, tp)
+            print(model.__class__)
 
             train_loader = get_data_loader(batch_size=conf.batch_size, is_train=True)
             val_loader = get_data_loader(batch_size=conf.batch_size, is_train=False)

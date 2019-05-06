@@ -74,7 +74,7 @@ class SingleUpsampling(nn.Module):
     def __init__(self):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
-        self.l1 = TransUpsampling(in_channels=256, out_channels=1, stride=17, kernel_size=2)
+        self.l1 = TransUpsampling(in_channels=256, out_channels=1, stride=17, kernel_size=3, padding=1)
         self.sgn = nn.Sigmoid()
 
     def forward(self, inputs, filename=''):
