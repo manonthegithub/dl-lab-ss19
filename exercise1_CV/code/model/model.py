@@ -59,14 +59,14 @@ class TransUpsampling(nn.Module):
         super().__init__()
         self.ups = nn.ConvTranspose2d(in_channels=in_channels, out_channels=out_channels, stride=stride,
                                       kernel_size=kernel_size, padding=padding)
-        # self.bn = nn.BatchNorm2d(num_features=out_channels)
+        self.bn = nn.BatchNorm2d(num_features=out_channels)
         # self.rl = nn.ReLU()
 
     def forward(self, input, skip=None):
         if skip is not None:
-            input = input.cat(skip, dim=0)
+            input = torch.cat((skip, input), dim=1)
         x = self.ups(input)
-        # x = self.bn(x)
+        x = self.bn(x)
         # x = self.rl(x)
         return x
 
@@ -74,23 +74,24 @@ class SingleUpsampling(nn.Module):
     def __init__(self):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
-        self.l1 = TransUpsampling(in_channels=256, out_channels=1, stride=17, kernel_size=3, padding=1)
+        self.l1 = TransUpsampling(in_channels=256, out_channels=1, stride=17, kernel_size=2)
         self.sgn = nn.Sigmoid()
 
     def forward(self, inputs, filename=''):
         x, _ = self.res_conv(inputs)
         x = self.l1(x)
         x = self.sgn(x)
-        return x
+        return x.squeeze(1)
 
 
 class TripleUpsampling(nn.Module):
     def __init__(self):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
-        self.l1 = TransUpsampling(in_channels=256, out_channels=64, stride=7, kernel_size=3, padding=1)
-        self.l2 = TransUpsampling(in_channels=64, out_channels=16, stride=6, kernel_size=3, padding=1)
-        self.l3 = TransUpsampling(in_channels=16, out_channels=1, stride=6, kernel_size=3, padding=1)
+        self.l1 = TransUpsampling(in_channels=256, out_channels=128, stride=2, kernel_size=2, padding=0)
+        self.l2 = TransUpsampling(in_channels=128, out_channels=64, stride=2, kernel_size=2, padding=0)
+        self.l3 = TransUpsampling(in_channels=64, out_channels=32, stride=2, kernel_size=2, padding=0)
+        self.l4 = TransUpsampling(in_channels=32, out_channels=1, stride=2, kernel_size=2, padding=0)
         self.sgn = nn.Sigmoid()
 
     def forward(self, inputs, filename=''):
@@ -98,16 +99,18 @@ class TripleUpsampling(nn.Module):
         x = self.l1(x)
         x = self.l2(x)
         x = self.l3(x)
+        x = self.l4(x)
         x = self.sgn(x)
-        return x
+        return x.squeeze(1)
 
 class TripleUpsamplingSkip(nn.Module):
     def __init__(self):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
-        self.l1 = TransUpsampling(in_channels=512, out_channels=64, stride=6, kernel_size=3, padding=1)
-        self.l2 = TransUpsampling(in_channels=128, out_channels=16, stride=4, kernel_size=3, padding=1)
-        self.l3 = TransUpsampling(in_channels=32, out_channels=1, stride=4, kernel_size=3, padding=1)
+        self.l1 = TransUpsampling(in_channels=512, out_channels=128, stride=2, kernel_size=2, padding=0)
+        self.l2 = TransUpsampling(in_channels=256, out_channels=64, stride=2, kernel_size=2, padding=0)
+        self.l3 = TransUpsampling(in_channels=128, out_channels=32, stride=2, kernel_size=2, padding=0)
+        self.l4 = TransUpsampling(in_channels=32, out_channels=1, stride=2, kernel_size=2, padding=0)
         self.sgn = nn.Sigmoid()
 
     def forward(self, inputs, filename=''):
@@ -115,8 +118,9 @@ class TripleUpsamplingSkip(nn.Module):
         x = self.l1(x, skips[2])
         x = self.l2(x, skips[1])
         x = self.l3(x, skips[0])
+        x = self.l4(x)
         x = self.sgn(x)
-        return x
+        return x.squeeze(1)
 
 
 class ResNetModel(nn.Module):

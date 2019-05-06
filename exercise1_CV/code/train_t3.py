@@ -66,12 +66,13 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, conf, is_train):
         if is_train:
             loss.backward()
             optimizer.step()
-
-        iou = (msk & pred) / (msk | pred)
-        iou_cumul += iou
+        pred = pred.round().int()
+        msk = msk.int()
+        iou = (msk & pred).sum().float() / (msk | pred).sum().float()
+        iou_cumul += iou.item()
         if idx % conf.log_every_batches == (conf.log_every_batches - 1):
             print('[%d, %5d, %5d] l2 loss: %.3f' % (eps + 1, idx + 1, (idx + 1) * conf.batch_size, loss.item()))
-            print('iou mean over batches: ' + iou_cumul / (idx + 1))
+            print('iou mean over batches: %.3f' % (iou_cumul / (idx + 1)))
     return iou_cumul / len(loader)
 
 
@@ -201,7 +202,7 @@ if __name__ == '__main__':
             train_loader = get_data_loader(batch_size=conf.batch_size, is_train=True)
             val_loader = get_data_loader(batch_size=conf.batch_size, is_train=False)
             optimizer = torch.optim.Adam(model.parameters(), lr=conf.learning_rate)
-            loss_fn = torch.nn.CrossEntropyLoss()
+            loss_fn = torch.nn.BCELoss()
             train_iou, val_iou = train(model=model,
                                             optimizer=optimizer,
                                             loss_fn=loss_fn,
@@ -209,3 +210,5 @@ if __name__ == '__main__':
                                             val_loader=val_loader,
                                             conf=conf,
                                             type=tp)
+    else:
+        print("Submitted no arguments")
