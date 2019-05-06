@@ -131,7 +131,7 @@ def plot(train, val):
     plt.plot(val, label='validation MPJPE')
     plt.ylim(bottom=0)
     plt.legend(loc='best')
-    plt.title('Task1. MPJPE for train and validation sets over epochs.')
+    plt.title('Task2. MPJPE for train and validation sets over epochs.')
     plt.xlabel('epochs')
     plt.ylabel('MPJPE')
     plt.grid(True)
