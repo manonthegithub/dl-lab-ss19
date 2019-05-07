@@ -118,8 +118,8 @@ def train(type, model, optimizer, loss_fn, train_loader, val_loader, conf):
                 eps % conf.take_snapshots_every_epochs == (conf.take_snapshots_every_epochs - 1)):
             print("Taking snapshot and saving to: " + conf.path_to_snapshot)
             torch.save(model.state_dict(), conf.path_to_snapshot)
-            torch.save(train_iou, TRAIN_IOU_STATE_FN)
-            torch.save(val_iou, VAL_IOU_STATE_FN)
+            torch.save(train_iou, type + TRAIN_IOU_STATE_FN)
+            torch.save(val_iou, type + VAL_IOU_STATE_FN)
             plot(type, train_iou, val_iou)
             fn = 'task3_' + type + '.png'
             print('Saving loss graph in ' + fn)
