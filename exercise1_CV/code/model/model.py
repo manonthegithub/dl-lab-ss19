@@ -91,9 +91,9 @@ class TripleUpsampling(nn.Module):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
         self.l1 = TransUpsampling(in_channels=256, out_channels=128, stride=2, kernel_size=2, padding=0)
-        self.l2 = TransUpsampling(in_channels=128, out_channels=64, stride=2, kernel_size=2, padding=0)
-        self.l3 = TransUpsampling(in_channels=64, out_channels=32, stride=2, kernel_size=2, padding=0)
-        self.l4 = TransUpsampling(in_channels=32, out_channels=1, stride=2, kernel_size=2, padding=0)
+        self.l2 = TransUpsampling(in_channels=128, out_channels=64, stride=2, kernel_size=4, padding=1)
+        self.l3 = TransUpsampling(in_channels=64, out_channels=32, stride=2, kernel_size=6, padding=2)
+        self.l4 = TransUpsampling(in_channels=32, out_channels=1, stride=2, kernel_size=8, padding=3)
         self.sgn = nn.Sigmoid()
 
     def forward(self, inputs, filename=''):
@@ -110,9 +110,9 @@ class TripleUpsamplingSkip(nn.Module):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
         self.l1 = TransUpsampling(in_channels=512, out_channels=128, stride=2, kernel_size=2, padding=0)
-        self.l2 = TransUpsampling(in_channels=256, out_channels=64, stride=2, kernel_size=2, padding=0)
-        self.l3 = TransUpsampling(in_channels=128, out_channels=32, stride=2, kernel_size=2, padding=0)
-        self.l4 = TransUpsampling(in_channels=32, out_channels=1, stride=2, kernel_size=2, padding=0)
+        self.l2 = TransUpsampling(in_channels=256, out_channels=64, stride=2, kernel_size=4, padding=1)
+        self.l3 = TransUpsampling(in_channels=128, out_channels=32, stride=2, kernel_size=6, padding=2)
+        self.l4 = TransUpsampling(in_channels=32, out_channels=1, stride=2, kernel_size=8, padding=3)
         self.sgn = nn.Sigmoid()
 
     def forward(self, inputs, filename=''):
