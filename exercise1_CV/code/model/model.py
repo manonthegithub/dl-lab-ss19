@@ -76,6 +76,7 @@ class SingleUpsampling(nn.Module):
     def __init__(self):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
+        self.res_conv.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
         self.l1 = nn.Conv2d(in_channels=256, out_channels=1, kernel_size=1)
         self.l2 = nn.Upsample((256, 256))
         self.sgn = nn.Sigmoid()
@@ -92,6 +93,7 @@ class TripleUpsampling(nn.Module):
     def __init__(self):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
+        self.res_conv.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
         self.l1 = TransUpsampling(in_channels=256, out_channels=128, stride=2, kernel_size=2, padding=0)
         self.l2 = TransUpsampling(in_channels=128, out_channels=64, stride=2, kernel_size=4, padding=1)
         self.l3 = TransUpsampling(in_channels=64, out_channels=32, stride=2, kernel_size=6, padding=2)
@@ -111,6 +113,7 @@ class TripleUpsamplingSkip(nn.Module):
     def __init__(self):
         super().__init__()
         self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
+        self.res_conv.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
         self.l1 = TransUpsampling(in_channels=512, out_channels=128, stride=2, kernel_size=2, padding=0)
         self.l2 = TransUpsampling(in_channels=256, out_channels=64, stride=2, kernel_size=4, padding=1)
         self.l3 = TransUpsampling(in_channels=128, out_channels=32, stride=2, kernel_size=6, padding=2)
