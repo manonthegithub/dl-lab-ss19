@@ -20,6 +20,16 @@ class ResNetConv(ResNet):
         
         return x, intermediate
 
+class ResNetConv2l(ResNet):
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        return x
+
 
 class SoftArgmax(nn.Module):
     def __init__(self):
@@ -40,18 +50,18 @@ class SoftResNetModel(nn.Module):
 
     def __init__(self, pretrained):
         super().__init__()
-        self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
-        self.avgpool = nn.Conv2d(in_channels=256, out_channels=17, kernel_size=1, padding=0)
-        self.ups = nn.Upsample((256, 256))
+        self.res_conv = ResNetConv2l(BasicBlock, [2, 2, 2, 2])
+        self.ups1 = TransUpsampling(in_channels=128, out_channels=64, stride=4, kernel_size=2, padding=0)
+        self.ups2 = TransUpsampling(in_channels=64, out_channels=17, stride=2, kernel_size=6, padding=0)
         self.argm = SoftArgmax()
 
         if pretrained:
             self.res_conv.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
 
     def forward(self, inputs, filename):
-        x, _ = self.res_conv(inputs)
-        x = self.avgpool(x)
-        x = self.ups(x)
+        x = self.res_conv(inputs)
+        x = self.ups1(x)
+        x = self.ups2(x)
         x = self.argm(x)
         return x
 
