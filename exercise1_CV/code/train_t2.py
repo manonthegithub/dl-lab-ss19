@@ -52,7 +52,7 @@ def process_epoch(model, optimizer, loss_fn, loader, eps, conf, is_train):
         vs = vs.to(device).float()
 
         optimizer.zero_grad()
-        pred = model.forward(imgs, '')
+        pred, _ = model.forward(imgs, '')
         loss = loss_fn(pred, kps).view(conf.batch_size, -1, 2)
         loss = loss * vs.unsqueeze(2)
         lv = loss.sum()

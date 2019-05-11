@@ -27,7 +27,6 @@ class ResNetConv2l(ResNet):
         x = self.relu(x)
         x = self.maxpool(x)
         x = self.layer1(x)
-        x = self.layer2(x)
         return x
 
 
@@ -51,8 +50,7 @@ class SoftResNetModel(nn.Module):
     def __init__(self, pretrained):
         super().__init__()
         self.res_conv = ResNetConv2l(BasicBlock, [2, 2, 2, 2])
-        self.conv = nn.ConvTranspose2d(in_channels=128, out_channels=64, stride=4, kernel_size=2, padding=0)
-        self.conv2 = nn.ConvTranspose2d(in_channels=64, out_channels=17, stride=2, kernel_size=6, padding=0)
+        self.conv = nn.ConvTranspose2d(in_channels=64, out_channels=17, stride=4, kernel_size=4, padding=0)
         self.argm = SoftArgmax()
 
         if pretrained:
@@ -61,9 +59,9 @@ class SoftResNetModel(nn.Module):
     def forward(self, inputs, filename):
         x = self.res_conv(inputs)
         x = self.conv(x)
-        x = self.conv2(x)
+        latent = x
         x = self.argm(x)
-        return x
+        return x, latent
 
 
 class TransUpsampling(nn.Module):
