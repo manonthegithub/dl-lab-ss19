@@ -49,16 +49,22 @@ class SoftResNetModel(nn.Module):
 
     def __init__(self, pretrained):
         super().__init__()
-        self.res_conv = ResNetConv2l(BasicBlock, [2, 2, 2, 2])
-        self.conv = nn.ConvTranspose2d(in_channels=64, out_channels=17, stride=4, kernel_size=4, padding=0)
+        self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
+        self.conv = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=1)
+        self.ups = nn.Upsample((64, 64))
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels=17, kernel_size=1)
+        self.ups2 = nn.Upsample((256, 256))
         self.argm = SoftArgmax()
 
         if pretrained:
             self.res_conv.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
 
     def forward(self, inputs, filename):
-        x = self.res_conv(inputs)
+        x, _ = self.res_conv(inputs)
         x = self.conv(x)
+        x = self.ups(x)
+        x = self.conv2(x)
+        x = self.ups2(x)
         latent = x
         x = self.argm(x)
         return x, latent
