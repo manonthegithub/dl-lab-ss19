@@ -27,6 +27,7 @@ class ResNetConv2l(ResNet):
         x = self.relu(x)
         x = self.maxpool(x)
         x = self.layer1(x)
+        x = self.layer2(x)
         return x
 
 
@@ -49,8 +50,8 @@ class SoftResNetModel(nn.Module):
 
     def __init__(self, pretrained):
         super().__init__()
-        self.res_conv = ResNetConv(BasicBlock, [2, 2, 2, 2])
-        self.conv = nn.Conv2d(in_channels=256, out_channels=64, kernel_size=1)
+        self.res_conv = ResNetConv2l(BasicBlock, [2, 2, 2, 2])
+        self.conv = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=1)
         self.ups = nn.Upsample((64, 64))
         self.conv2 = nn.Conv2d(in_channels=64, out_channels=17, kernel_size=1)
         self.ups2 = nn.Upsample((256, 256))
@@ -60,7 +61,7 @@ class SoftResNetModel(nn.Module):
             self.res_conv.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
 
     def forward(self, inputs, filename):
-        x, _ = self.res_conv(inputs)
+        x = self.res_conv(inputs)
         x = self.conv(x)
         x = self.ups(x)
         x = self.conv2(x)
