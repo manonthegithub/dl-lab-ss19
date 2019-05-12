@@ -40,29 +40,22 @@ def load_mpjpe_state(val, train):
 
 
 def create_model_soft_res_net():
-    file = 'trained_net_t2.model'
+    file = 'trained_net_t2_3l.model'
     print("Loading SoftResNetModel")
     model = SoftResNetModel(pretrained=False)
-    if os.access(file, os.R_OK):
-        model.load_state_dict(torch.load(file, map_location=DEVICE))
-        print("Snapshot from " + file + " was successfully loaded.")
-    else:
-        print("ERROR: Could not load the model.")
-        print("Using newly initialized model.")
+    model.load_state_dict(torch.load(file, map_location=DEVICE))
+    print("Snapshot from " + file + " was successfully loaded.")
     model.to(device)
     return model
 
 
 def create_model_regression():
-    file = 'trained_net.model'
+    file = 'trained_net_pretrained.model'
     print("Loading ResNetModel")
     model = ResNetModel(pretrained=False)
-    if os.access(file, os.R_OK):
-        model.load_state_dict(torch.load(file, map_location=DEVICE))
-        print("Snapshot from " + file + " was successfully loaded.")
-    else:
-        print("ERROR: Could not load the model.")
-        print("Using newly initialized model.")
+    model.load_state_dict(torch.load(file, map_location=DEVICE))
+    print("Snapshot from " + file + " was successfully loaded.")
+
     model.to(device)
     return model
 
@@ -76,7 +69,7 @@ if __name__ == '__main__':
 
     v1, t1 = load_mpjpe_state('validation_mpjpe_state', 'train_mpjpe_state')
     v1p, t1p = load_mpjpe_state('validation_mpjpe_state_pretrained', 'train_mpjpe_state_pretrained')
-    v2, t2 = load_mpjpe_state('validation_mpjpe_state_t2', 'train_mpjpe_state_t2')
+    v2, t2 = load_mpjpe_state('validation_mpjpe_state_t2_3l', 'train_mpjpe_state_t2_3l')
 
     li = [
         (v1, t1, 'ResNetModel. validation', 'ResNetModel. train'),
@@ -86,45 +79,71 @@ if __name__ == '__main__':
 
     plot(li)
 
-
+    ind = 0
     for img, keypoints, weights in reader:
-        print('img', type(img), img.shape)
-        print('keypoints', type(keypoints), keypoints.shape)
-        print('weights', type(weights), weights.shape)
+        if ind == 5:
+            print('img', type(img), img.shape)
+            print('keypoints', type(keypoints), keypoints.shape)
+            print('weights', type(weights), weights.shape)
 
-        pred_soft, prob_maps = resnet_t2(img, '')
-        pred_soft = pred_soft.detach().numpy()
-        prob_maps = prob_maps.detach().numpy()
+            weights = weights.int().detach().numpy()
 
-        pred_regr = regression(img, '')
-        pred_regr = pred_regr.detach().numpy()
+            pred_soft, prob_maps = resnet_t2(img, '')
+            pred_soft = pred_soft.detach().numpy()
+            prob_maps = prob_maps.detach().numpy()
+
+            pred_regr = regression(img, '')
+            pred_regr = pred_regr.detach().numpy()
 
 
-        # turn image tensor into numpy array containing correctly scaled RGB image
-        img_rgb = ((np.array(img) + 1.0)*127.5).round().astype(np.uint8).transpose([0, 2, 3, 1])
+            # turn image tensor into numpy array containing correctly scaled RGB image
+            img_rgb = ((np.array(img) + 1.0)*127.5).round().astype(np.uint8).transpose([0, 2, 3, 1])
+            plt.savefig('t1_quantitative.png', format='png')
 
-        # show
-        axs = plt.figure().subplots(nrows=1, ncols=3)
-        axs[0].imshow(img_rgb[0])
-        axs[0].axis('off')
-        plot_keypoints(axs[0], keypoints[0], weights[0], draw_limbs=True, draw_kp=True)
+            # show
+            axs = plt.figure().subplots(nrows=1, ncols=3)
+            axs[0].imshow(img_rgb[0])
+            axs[0].axis('off')
+            axs[0].set_title('Ground truth.')
+            plot_keypoints(axs[0], keypoints[0], weights[0], draw_limbs=True, draw_kp=True)
 
-        axs[1].imshow(img_rgb[0])
-        axs[1].axis('off')
-        plot_keypoints(axs[1], pred_soft[0], weights[0], draw_limbs=True, draw_kp=True)
+            axs[1].imshow(img_rgb[0])
+            axs[1].axis('off')
+            axs[1].set_title('Softargmax')
+            plot_keypoints(axs[1], pred_soft[0], weights[0], draw_limbs=True, draw_kp=True)
 
-        axs[2].imshow(img_rgb[0])
-        axs[2].axis('off')
-        plot_keypoints(axs[2], pred_regr[0], weights[0], draw_limbs=True, draw_kp=True)
+            axs[2].imshow(img_rgb[0])
+            axs[2].axis('off')
+            axs[2].set_title('Regression')
+            plot_keypoints(axs[2], pred_regr[0], weights[0], draw_limbs=True, draw_kp=True)
+            plt.savefig('t1_qualitative.png', format='png')
 
-        axs = plt.figure().subplots(nrows=3, ncols=6)
-        idx = 0
-        for i in axs:
-            for ax in i:
-                if(idx < prob_maps.shape[1]):
-                    ax.imshow(prob_maps[0][idx]); ax.axis('off')
+
+            dims = weights[0].sum()
+            f = plt.figure(figsize=((dims+1), 8))
+            # f.suptitle("Probability maps in the latent space of Softargmax.")
+            axs = f.subplots(nrows=3, ncols=(dims + 1) // 3 + 1)
+
+            axs[0][0].imshow(img_rgb[0])
+            axs[0][0].axis('off')
+            plot_keypoints(axs[0][0], pred_soft[0], weights[0], draw_limbs=True, draw_kp=True)
+
+            idx = 0
+            axs = axs.reshape(-1)[1:]
+            for ax in axs:
+                if idx < weights.shape[1]:
+                    while weights[0][idx] != 1:
+                        idx += 1
+                    ax.imshow(img_rgb[0], cmap='gray')
+                    im = ax.imshow(prob_maps[0][idx], cmap='jet', alpha=0.5)
+
+                    idx += 1
                 ax.axis('off')
-                idx += 1
 
-        break
-    plt.show()
+            plt.savefig('task2_prob_maps.png', format='png')
+            plt.show()
+            break
+        else:
+            ind += 1
+
+
