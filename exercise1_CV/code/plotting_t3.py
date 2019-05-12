@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     ind = 0
     for img, msk in reader:
-        if ind > 7:
+        if ind > 8:
             print('img', type(img), img.shape)
 
             pred_si = single(img, '')
@@ -136,9 +136,8 @@ if __name__ == '__main__':
             axs[1][3].axis('off')
 
             plt.tight_layout()
+            plt.savefig('t3_qualitative.png', format='png')
             plt.show()
             break
         else:
             ind += 1
-
-
