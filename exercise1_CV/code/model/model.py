@@ -40,10 +40,11 @@ class SoftArgmax(nn.Module):
 
     def forward(self, input):
         l = F.softmax(input.view((input.shape[0], input.shape[1], -1)), dim=2).view(input.shape)
+        lat = l
         xs = ((l * self.state_dict()['rws']).sum(dim=(2, 3))).unsqueeze(2)
         ys = ((l * self.state_dict()['cls']).sum(dim=(2, 3))).unsqueeze(2)
         l = torch.cat((xs, ys), dim=2).view(input.shape[0], -1)
-        return l
+        return l, lat
 
 
 class SoftResNetModel(nn.Module):
@@ -66,8 +67,7 @@ class SoftResNetModel(nn.Module):
         x = self.ups(x)
         x = self.conv2(x)
         x = self.ups2(x)
-        latent = x
-        x = self.argm(x)
+        x, latent = self.argm(x)
         return x, latent
 
 
