@@ -150,8 +150,8 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 16
-    batch_size = 32
+    hl = 32
+    batch_size = 16
 
     # preprocess data
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
@@ -173,5 +173,5 @@ if __name__ == "__main__":
     minibatches = 5000
 
     # train model (you can change the parameters!)
-    train_model(X_train, y_train, X_valid, y_valid, hl=hl, weights=weights, n_minibatches=minibatches, batch_size=batch_size, lr=1e-4)
+    train_model(X_train, y_train, X_valid, y_valid, hl=hl, weights=weights, n_minibatches=minibatches, batch_size=batch_size, lr=1e-3)
  

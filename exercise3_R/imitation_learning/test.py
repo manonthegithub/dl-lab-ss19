@@ -62,7 +62,7 @@ if __name__ == "__main__":
     # important: don't set rendering to False for evaluation (you may get corrupted state images from gym)
     rendering = True                      
 
-    hl = 16
+    hl = 32
     n_test_episodes = 15                  # number of episodes to test
 
     # TODO: load agent
