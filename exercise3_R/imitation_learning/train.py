@@ -36,11 +36,24 @@ def read_data(datasets_dir="./data", frac = 0.1):
 
 
 def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
-
     # TODO: preprocess your data here.
     # 1. convert the images in X_train/X_valid to gray scale. If you use rgb2gray() from utils.py, the output shape (96, 96, 1)
     # 2. you can train your model with discrete actions (as you get them from read_data) by discretizing the action space 
     #    using action_to_id() from utils.py.
+
+    # y_train = action_to_id(y_train)
+    # y_valid = action_to_id(y_valid)
+    y_train = np.array([action_to_id(y_train[i]) for i in range(y_train.shape[0])])
+    y_valid = np.array([action_to_id(y_valid[i]) for i in range(y_valid.shape[0])])
+
+
+    X_train = rgb2gray(X_train)
+    X_valid = rgb2gray(X_valid)
+
+    X_train = slide(X_train, width=history_length)
+    X_valid = slide(X_valid, width=history_length)
+    y_train = y_train[history_length - 1:]
+    y_valid = y_valid[history_length - 1:]
 
     # History:
     # At first you should only use the current image as input to your network to learn the next action. Then the input states
@@ -49,7 +62,23 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
     return X_train, y_train, X_valid, y_valid
 
 
-def train_model(X_train, y_train, X_valid, n_minibatches, batch_size, lr, model_dir="./models", tensorboard_dir="./tensorboard"):
+
+def slide(data, width):
+    samples = data.shape[0]
+    return np.array([data[i: i + width] for i in range(samples - width + 1)])
+
+def sample_minibatch(X, y, batch_size):
+    elems = X.shape[0]
+    rnd = np.random.randint(elems - batch_size + 1, size=batch_size)
+    return X[rnd], y[rnd]
+
+def compute_accuracy(y_out, y_gt):
+    true_preds = np.where(y_out == y_gt, 1, 0).sum()
+    all_preds = y_gt.size
+    return true_preds / all_preds
+
+
+def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, lr, weights, hl = 1, model_dir="./models", tensorboard_dir="./tensorboard"):
     
     # create result and model folders
     if not os.path.exists(model_dir):
@@ -57,11 +86,9 @@ def train_model(X_train, y_train, X_valid, n_minibatches, batch_size, lr, model_
  
     print("... train model")
 
-
     # TODO: specify your agent with the neural network in agents/bc_agent.py 
-    # agent = BCAgent(...)
-    
-    tensorboard_eval = Evaluation(tensorboard_dir)
+    agent = BCAgent(lr=lr, history_length=hl, weights=weights)
+    tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
     # TODO: implement the training
     # 
@@ -75,10 +102,31 @@ def train_model(X_train, y_train, X_valid, n_minibatches, batch_size, lr, model_
     #     for i % 10 == 0:
     #         # compute training/ validation accuracy and write it to tensorboard
     #         tensorboard_eval.write_episode_data(...)
+    for i in range(n_minibatches):
+        x, y = sample_minibatch(X_train, y_train, batch_size)
+        loss = agent.update(x, y)
+        if i % 10 == 0:
+            # compute training/ validation accuracy and write it to tensorboard
+
+            outs = agent.predict(x)
+            outs = outs.argmax(dim=1).detach().numpy()
+            train_acc = compute_accuracy(outs, y)
+
+            val_outs = agent.predict(X_valid)
+            val_outs = val_outs.argmax(dim=1).detach().numpy()
+            val_acc = compute_accuracy(val_outs, y_valid)
+
+            eval_dict = {
+                "loss": loss,
+                "train_accuracy": train_acc,
+                "validation_accuracy": val_acc
+            }
+            print(eval_dict)
+            tensorboard_eval.write_episode_data(i, eval_dict)
       
     # TODO: save your agent
-    # model_dir = agent.save(os.path.join(model_dir, "agent.pt"))
-    # print("Model saved in file: %s" % model_dir)
+    model_dir = agent.save(os.path.join(model_dir, "agent.pt"))
+    print("Model saved in file: %s" % model_dir)
 
 
 if __name__ == "__main__":
@@ -86,9 +134,28 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
+    hl = 32
+    batch_size = 32
+
     # preprocess data
-    X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=1)
+    X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
+
+    cnt = y_train.size
+    stra = np.where(y_train == 0, 1, 0).sum()
+    le = np.where(y_train == 1, 1, 0).sum()
+    rt = np.where(y_train == 2, 1, 0).sum()
+    acc = np.where(y_train == 3, 1, 0).sum()
+    br = np.where(y_train == 4, 1, 0).sum()
+    print('Straight ' + str(stra))
+    print('Left ' + str(le))
+    print('Right ' + str(rt))
+    print('Accelerate ' + str(acc))
+    print('Break ' + str(br))
+    weights = 1 / (np.array([stra, le, rt, acc, br]) / cnt + 0.000000000001)
+    print('Weights ' + str(weights))
+
+    minibatches = 5000
 
     # train model (you can change the parameters!)
-    train_model(X_train, y_train, X_valid, n_minibatches=1000, batch_size=64, lr=1e-4)
+    train_model(X_train, y_train, X_valid, y_valid, hl=hl, weights=weights, n_minibatches=minibatches, batch_size=batch_size, lr=1e-4)
  
