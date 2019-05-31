@@ -6,8 +6,8 @@ class BCAgent:
 
     def __init__(self, device, weights, lr=1e-3, history_length=1):
         # TODO: Define network, loss function, optimizer
-        n_classes = 5
-        model = CNN(history_length=history_length, n_classes=n_classes)
+        self.n_classes = 5
+        model = CNN(history_length=history_length, n_classes=self.n_classes)
         model.to(device)
         self.net = model
         self.loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor(weights).to(device).float())
@@ -19,7 +19,8 @@ class BCAgent:
         self.net.train()
         self.optimizer.zero_grad()
         out = self.net(X_batch)
-        loss = self.loss_fn(out, y_batch)
+        out = out.view(-1, self.n_classes)
+        loss = self.loss_fn(out, y_batch.view(-1))
         loss.backward()
         self.optimizer.step()
         return loss

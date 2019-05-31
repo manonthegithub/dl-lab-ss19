@@ -61,8 +61,8 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
 
     X_train = slide(X_train, width=history_length)
     X_valid = slide(X_valid, width=history_length)
-    y_train = y_train[history_length - 1:]
-    y_valid = y_valid[history_length - 1:]
+    y_train = slide(y_train, width=history_length)
+    y_valid = slide(y_valid, width=history_length)
 
     # History:
     # At first you should only use the current image as input to your network to learn the next action. Then the input states
@@ -121,7 +121,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
             # compute training/ validation accuracy and write it to tensorboard
             print("round")
             outs = agent.predict(x)
-            outs = outs.argmax(dim=1)
+            outs = outs.argmax(dim=2)
             train_acc = compute_accuracy(outs, y)
 
             val_bs = np.array_split(X_valid, batch_size)
@@ -132,7 +132,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
                 inp = torch.tensor(val_bs[ii]).to(device)
                 lba = torch.tensor(val_ys[ii]).to(device)
                 val_outs = agent.predict(inp)
-                val_outs = val_outs.argmax(dim=1)
+                val_outs = val_outs.argmax(dim=2)
                 val_acc = compute_accuracy(val_outs, lba)
                 val_acc_cum += val_acc
 
@@ -158,7 +158,12 @@ if __name__ == "__main__":
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
     hl = 16
-    batch_size = 64
+    batch_size = 32
+
+    # X_train = X_train[:100]
+    # X_valid = X_train[:100]
+    # y_train = y_train[:100]
+    # y_valid = y_valid[:100]
 
     # preprocess data
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
