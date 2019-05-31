@@ -82,7 +82,7 @@ def sample_minibatch(X, y, batch_size):
     return X[rnd], y[rnd]
 
 def compute_accuracy(y_out, y_gt):
-    true_preds = torch.where(y_out == y_gt, torch.tensor(1), torch.tensor(0)).sum()
+    true_preds = torch.where(y_out == y_gt, torch.tensor(1).to(device), torch.tensor(0).to(device)).sum()
     all_preds = y_gt.numel()
     return (true_preds / all_preds).item()
 
@@ -113,7 +113,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     #         tensorboard_eval.write_episode_data(...)
     X_valid = torch.tensor(X_valid)
     y_valid = torch.tensor(y_valid)
-
+    print('Valid data in mem')
 
     for i in range(n_minibatches):
         x, y = sample_minibatch(X_train, y_train, batch_size)
@@ -150,8 +150,8 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 32
-    batch_size = 32
+    hl = 8
+    batch_size = 16
 
     # preprocess data
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
