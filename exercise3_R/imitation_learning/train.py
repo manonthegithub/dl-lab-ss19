@@ -104,6 +104,10 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     agent = BCAgent(device, lr=lr, history_length=hl, weights=weights)
     tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
+    val_bs = np.array_split(X_valid, batch_size)
+    val_ys = np.array_split(y_valid, batch_size)
+    elems = len(val_bs)
+
     # TODO: implement the training
     # 
     # 1. write a method sample_minibatch and perform an update step
@@ -116,6 +120,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     #     for i % 10 == 0:
     #         # compute training/ validation accuracy and write it to tensorboard
     #         tensorboard_eval.write_episode_data(...)
+    print("Starting loop.")
 
     for i in range(n_minibatches):
         x, y = sample_minibatch(X_train, y_train, batch_size)
@@ -129,9 +134,6 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
             outs = outs.argmax(dim=2)
             train_acc = compute_accuracy(outs, y)
 
-            val_bs = np.array_split(X_valid, batch_size)
-            val_ys = np.array_split(y_valid, batch_size)
-            elems = len(val_bs)
             val_acc_cum = 0
             for ii in range(elems):
                 inp = torch.tensor(val_bs[ii]).to(device)
@@ -162,8 +164,8 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 12
-    batch_size = 16
+    hl = 8
+    batch_size = 32
 
     # X_train = X_train[:100]
     # X_valid = X_valid[:100]
