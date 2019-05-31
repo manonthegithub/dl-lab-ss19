@@ -43,7 +43,7 @@ def read_data(datasets_dir="./data", frac = 0.1):
     y = y[:limit]
 
     # split data into training and validation set
-    n_samples = len(data["state"])
+    n_samples = X.shape[0]
     X_train, y_train = X[:int((1-frac) * n_samples)], y[:int((1-frac) * n_samples)]
     X_valid, y_valid = X[int((1-frac) * n_samples):], y[int((1-frac) * n_samples):]
     return X_train, y_train, X_valid, y_valid
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     batch_size = 32
 
     # X_train = X_train[:100]
-    # X_valid = X_train[:100]
+    # X_valid = X_valid[:100]
     # y_train = y_train[:100]
     # y_valid = y_valid[:100]
 
