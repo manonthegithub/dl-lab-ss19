@@ -37,6 +37,11 @@ def read_data(datasets_dir="./data", frac = 0.1):
     X = np.array(data["state"]).astype('float32')
     y = np.array(data["action"]).astype('float32')
 
+    limit = 13000
+
+    X = X[:limit]
+    y = y[:limit]
+
     # split data into training and validation set
     n_samples = len(data["state"])
     X_train, y_train = X[:int((1-frac) * n_samples)], y[:int((1-frac) * n_samples)]
@@ -157,7 +162,7 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 16
+    hl = 12
     batch_size = 32
 
     # X_train = X_train[:100]
