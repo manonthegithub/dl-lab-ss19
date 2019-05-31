@@ -20,6 +20,7 @@ else:
     DEVICE = 'cpu'
 
 device = torch.device(DEVICE)
+print(device)
 
 def read_data(datasets_dir="./data", frac = 0.1):
     """
