@@ -111,8 +111,8 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     #     for i % 10 == 0:
     #         # compute training/ validation accuracy and write it to tensorboard
     #         tensorboard_eval.write_episode_data(...)
-    X_valid = torch.tensor(X_valid)
-    y_valid = torch.tensor(y_valid)
+    X_valid = torch.tensor(X_valid).to(device)
+    y_valid = torch.tensor(y_valid).to(device)
     print('Valid data in mem')
 
     for i in range(n_minibatches):
