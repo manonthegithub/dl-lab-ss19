@@ -128,9 +128,9 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
             val_ys = np.array_split(y_valid, batch_size)
             elems = val_bs.shape[0]
             val_acc_cum = 0
-            for i in range(elems):
-                inp = torch.tensor(val_bs[i]).to(device)
-                lba = torch.tensor(val_ys[i]).to(device)
+            for ii in range(elems):
+                inp = torch.tensor(val_bs[ii]).to(device)
+                lba = torch.tensor(val_ys[ii]).to(device)
                 val_outs = agent.predict(inp)
                 val_outs = val_outs.argmax(dim=1)
                 val_acc = compute_accuracy(val_outs, lba)
@@ -180,5 +180,5 @@ if __name__ == "__main__":
     minibatches = 5000
 
     # train model (you can change the parameters!)
-    train_model(X_train, y_train, X_valid, y_valid, hl=hl, weights=weights, n_minibatches=minibatches, batch_size=batch_size, lr=1e-3)
+    train_model(X_train, y_train, X_valid, y_valid, hl=hl, weights=weights, n_minibatches=minibatches, batch_size=batch_size, lr=1e-5)
  
