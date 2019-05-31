@@ -163,7 +163,7 @@ if __name__ == "__main__":
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
     hl = 12
-    batch_size = 32
+    batch_size = 16
 
     # X_train = X_train[:100]
     # X_valid = X_valid[:100]
