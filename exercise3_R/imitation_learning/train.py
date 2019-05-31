@@ -126,7 +126,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
 
             val_bs = np.array_split(X_valid, batch_size)
             val_ys = np.array_split(y_valid, batch_size)
-            elems = val_bs.shape[0]
+            elems = len(val_bs)
             val_acc_cum = 0
             for ii in range(elems):
                 inp = torch.tensor(val_bs[ii]).to(device)
