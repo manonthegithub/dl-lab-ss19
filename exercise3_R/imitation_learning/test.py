@@ -38,8 +38,11 @@ def run_episode(env, agent, hl, rendering=True, max_timesteps=1000):
         #       - just in case your agent misses the first turn because it is too fast: you are allowed to clip the acceleration in test_agent.py
         #       - you can use the softmax output to calculate the amount of lateral acceleration
         # a = ...
-        a = agent.predict(state)
-        a = id_to_action(a.argmax(dim=1).squeeze())
+        if step < 10:
+            a = [0.0, 1.0, 0.0]
+        else:
+            a = agent.predict(state)
+            a = id_to_action(a.argmax(dim=1).squeeze())
 
         next_state, r, done, info = env.step(a)   
         episode_reward += r
@@ -62,7 +65,7 @@ if __name__ == "__main__":
     # important: don't set rendering to False for evaluation (you may get corrupted state images from gym)
     rendering = True                      
 
-    hl = 32
+    hl = 16
     n_test_episodes = 15                  # number of episodes to test
 
     # TODO: load agent
