@@ -111,9 +111,6 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     #     for i % 10 == 0:
     #         # compute training/ validation accuracy and write it to tensorboard
     #         tensorboard_eval.write_episode_data(...)
-    X_valid = torch.tensor(X_valid).to(device)
-    y_valid = torch.tensor(y_valid).to(device)
-    print('Valid data in mem')
 
     for i in range(n_minibatches):
         x, y = sample_minibatch(X_train, y_train, batch_size)
@@ -127,16 +124,26 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
             outs = outs.argmax(dim=1)
             train_acc = compute_accuracy(outs, y)
 
+            val_bs = np.array_split(X_valid, batch_size)
+            val_ys = np.array_split(y_valid, batch_size)
+            elems = val_bs.shape[0]
+            val_acc_cum = 0
+            for i in range(elems):
+                inp = torch.tensor(val_bs[i]).to(device)
+                lba = torch.tensor(val_ys[i]).to(device)
+                val_outs = agent.predict(inp)
+                val_outs = val_outs.argmax(dim=1)
+                val_acc = compute_accuracy(val_outs, lba)
+                val_acc_cum += val_acc
 
-            val_outs = agent.predict(X_valid)
-            val_outs = val_outs.argmax(dim=1)
-            val_acc = compute_accuracy(val_outs, y_valid)
+            val_acc_cum = val_acc_cum / elems
 
             eval_dict = {
                 "loss": loss.item(),
                 "train_accuracy": train_acc,
-                "validation_accuracy": val_acc
+                "validation_accuracy": val_acc_cum
             }
+
             print(eval_dict)
             tensorboard_eval.write_episode_data(i, eval_dict)
       
@@ -151,7 +158,7 @@ if __name__ == "__main__":
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
     hl = 32
-    batch_size = 16
+    batch_size = 64
 
     # preprocess data
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
