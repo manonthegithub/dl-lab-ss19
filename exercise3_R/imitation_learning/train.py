@@ -117,7 +117,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
             val_acc = compute_accuracy(val_outs, y_valid)
 
             eval_dict = {
-                "loss": loss,
+                "loss": loss.item(),
                 "train_accuracy": train_acc,
                 "validation_accuracy": val_acc
             }
