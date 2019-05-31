@@ -83,16 +83,21 @@ if __name__ == "__main__":
     while True:
         episode_reward = 0
         state = env.reset()
+        states = []
+        actions = []
+        next_states = []
+        rewards = []
+        terminals = []
         while True:
 
             next_state, r, done, info = env.step(a)
             episode_reward += r
 
-            samples["state"].append(state)            # state has shape (96, 96, 3)
-            samples["action"].append(np.array(a))     # action has shape (1, 3)
-            samples["next_state"].append(next_state)
-            samples["reward"].append(r)
-            samples["terminal"].append(done)
+            states.append(state)
+            actions.append(np.array(a))
+            next_states.append(next_state)
+            rewards.append(r)
+            terminals.append(done)
             
             state = next_state
             steps += 1
@@ -101,16 +106,21 @@ if __name__ == "__main__":
                 print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
                 print("\nstep {}".format(steps))
 
-            if args.collect_data and steps % 5000 == 0:
-                print('... saving data')
-                store_data(samples, "./data")
-                save_results(episode_rewards, "./results")
-
             env.render()
-            if done: 
+            if done:
+                if args.collect_data and episode_reward > 900:
+                    print('... saving data')
+                    samples["state"] += states  # state has shape (96, 96, 3)
+                    samples["action"] += actions  # action has shape (1, 3)
+                    samples["next_state"] += next_states
+                    samples["reward"] += rewards
+                    samples["terminal"] += terminals
+                    store_data(samples, "./data")
+                    episode_rewards.append(episode_reward)
+                    save_results(episode_rewards, "./results")
                 break
         
-        episode_rewards.append(episode_reward)
+
 
     env.close()
 

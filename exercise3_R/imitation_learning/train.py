@@ -177,8 +177,8 @@ if __name__ == "__main__":
     weights = 1 / (np.array([stra, le, rt, acc, br]) / cnt + 0.000000000001)
     print('Weights ' + str(weights))
 
-    minibatches = 50000
+    minibatches = 100000
 
     # train model (you can change the parameters!)
-    train_model(X_train, y_train, X_valid, y_valid, hl=hl, weights=weights, n_minibatches=minibatches, batch_size=batch_size, lr=1e-5)
+    train_model(X_train, y_train, X_valid, y_valid, hl=hl, weights=weights, n_minibatches=minibatches, batch_size=batch_size, lr=1e-4)
  
