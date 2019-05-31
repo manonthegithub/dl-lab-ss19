@@ -32,7 +32,7 @@ class BCAgent:
             return outputs
 
     def load(self, file_name):
-        self.net.load_state_dict(torch.load(file_name))
+        self.net.load_state_dict(torch.load(file_name, map_location='cpu'))
 
     def save(self, file_name):
         torch.save(self.net.state_dict(), file_name)

@@ -8,17 +8,20 @@ import numpy as np
 import gym
 import os
 import json
+import torch
 
 from agent.bc_agent import BCAgent
 from utils import *
 
 
-def run_episode(env, agent, rendering=True, max_timesteps=1000):
+def run_episode(env, agent, hl, rendering=True, max_timesteps=1000):
     
     episode_reward = 0
     step = 0
 
     state = env.reset()
+    state = rgb2gray(state)
+    state = torch.tensor(state).unsqueeze(0).repeat(hl, 1, 1).unsqueeze(0)
     
     # fix bug of curropted states without rendering in racingcar gym environment
     env.viewer.window.dispatch_events() 
@@ -27,7 +30,6 @@ def run_episode(env, agent, rendering=True, max_timesteps=1000):
         
         # TODO: preprocess the state in the same way than in your preprocessing in train_agent.py
         #    state = ...
-
         
         # TODO: get the action from your agent! You need to transform the discretized actions to continuous
         # actions.
@@ -36,10 +38,14 @@ def run_episode(env, agent, rendering=True, max_timesteps=1000):
         #       - just in case your agent misses the first turn because it is too fast: you are allowed to clip the acceleration in test_agent.py
         #       - you can use the softmax output to calculate the amount of lateral acceleration
         # a = ...
+        a = agent.predict(state)
+        a = id_to_action(a.argmax(dim=1).squeeze())
 
         next_state, r, done, info = env.step(a)   
-        episode_reward += r       
-        state = next_state
+        episode_reward += r
+
+        next_state = torch.tensor(rgb2gray(next_state)).unsqueeze(0).unsqueeze(0)
+        state = torch.cat((state[:,:hl-1,:,:], next_state), dim=1)
         step += 1
         
         if rendering:
@@ -55,18 +61,19 @@ if __name__ == "__main__":
 
     # important: don't set rendering to False for evaluation (you may get corrupted state images from gym)
     rendering = True                      
-    
+
+    hl = 16
     n_test_episodes = 15                  # number of episodes to test
 
     # TODO: load agent
-    # agent = BCAgent(...)
-    # agent.load("models/bc_agent.pt")
+    agent = BCAgent(torch.device('cpu'), lr=0.0001, history_length=hl, weights=[1,1,1,1,1])
+    agent.load("models/agent.pt")
 
     env = gym.make('CarRacing-v0').unwrapped
 
     episode_rewards = []
     for i in range(n_test_episodes):
-        episode_reward = run_episode(env, agent, rendering=rendering)
+        episode_reward = run_episode(env, agent, hl, rendering=rendering)
         episode_rewards.append(episode_reward)
 
     # save results in a dictionary and write them into a .json file
