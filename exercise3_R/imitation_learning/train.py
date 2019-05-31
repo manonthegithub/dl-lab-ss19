@@ -21,7 +21,7 @@ def read_data(datasets_dir="./data", frac = 0.1):
     print("... read data")
     data_file = os.path.join(datasets_dir, 'data.pkl.gzip')
   
-    f = gzip.open(data_file,'rb')
+    f = gzip.open(data_file, 'rb')
     data = pickle.load(f)
 
     # get images as features and actions as targets
