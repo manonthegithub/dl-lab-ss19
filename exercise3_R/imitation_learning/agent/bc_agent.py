@@ -1,21 +1,12 @@
 import torch
 from agent.networks import CNN
 
-if torch.cuda.device_count() > 0:
-    DEVICE = 'cuda'
-else:
-    DEVICE = 'cpu'
-
-device = torch.device(DEVICE)
-
 
 class BCAgent:
 
-    def __init__(self, weights, lr=1e-3, history_length=1):
+    def __init__(self, device, weights, lr=1e-3, history_length=1):
         # TODO: Define network, loss function, optimizer
         n_classes = 5
-        print(DEVICE)
-        print(device)
         model = CNN(history_length=history_length, n_classes=n_classes)
         model.to(device)
         self.net = model
@@ -27,21 +18,17 @@ class BCAgent:
         # TODO: forward + backward + optimize
         self.net.train()
         self.optimizer.zero_grad()
-        X_batch = torch.tensor(X_batch).to(device)
-        y_batch = torch.tensor(y_batch).to(device)
         out = self.net(X_batch)
         loss = self.loss_fn(out, y_batch)
         loss.backward()
         self.optimizer.step()
-        return loss.detach()
+        return loss
 
     def predict(self, X):
         with torch.no_grad():
             # TODO: forward pass
-            X = torch.tensor(X).to(device)
             self.net.eval()
             outputs = self.net(X)
-            outputs = outputs.detach()
             return outputs
 
     def load(self, file_name):

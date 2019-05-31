@@ -8,10 +8,18 @@ import numpy as np
 import os
 import gzip
 import matplotlib.pyplot as plt
+import torch
 
 from utils import *
 from agent.bc_agent import BCAgent
 from tensorboard_evaluation import Evaluation
+
+if torch.cuda.device_count() > 0:
+    DEVICE = 'cuda'
+else:
+    DEVICE = 'cpu'
+
+device = torch.device(DEVICE)
 
 def read_data(datasets_dir="./data", frac = 0.1):
     """
@@ -73,9 +81,9 @@ def sample_minibatch(X, y, batch_size):
     return X[rnd], y[rnd]
 
 def compute_accuracy(y_out, y_gt):
-    true_preds = np.where(y_out == y_gt, 1, 0).sum()
-    all_preds = y_gt.size
-    return true_preds / all_preds
+    true_preds = torch.where(y_out == y_gt, torch.tensor(1), torch.tensor(0)).sum()
+    all_preds = y_gt.numel()
+    return (true_preds / all_preds).item()
 
 
 def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, lr, weights, hl = 1, model_dir="./models", tensorboard_dir="./tensorboard"):
@@ -87,7 +95,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     print("... train model")
 
     # TODO: specify your agent with the neural network in agents/bc_agent.py 
-    agent = BCAgent(lr=lr, history_length=hl, weights=weights)
+    agent = BCAgent(device, lr=lr, history_length=hl, weights=weights)
     tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
     # TODO: implement the training
@@ -102,18 +110,25 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     #     for i % 10 == 0:
     #         # compute training/ validation accuracy and write it to tensorboard
     #         tensorboard_eval.write_episode_data(...)
+    X_valid = torch.tensor(X_valid)
+    y_valid = torch.tensor(y_valid)
+
+
     for i in range(n_minibatches):
         x, y = sample_minibatch(X_train, y_train, batch_size)
+        x = torch.tensor(x).to(device)
+        y = torch.tensor(y).to(device)
         loss = agent.update(x, y)
         if i % 10 == 0:
             # compute training/ validation accuracy and write it to tensorboard
             print("round")
             outs = agent.predict(x)
-            outs = outs.argmax(dim=1).detach().numpy()
+            outs = outs.argmax(dim=1)
             train_acc = compute_accuracy(outs, y)
 
+
             val_outs = agent.predict(X_valid)
-            val_outs = val_outs.argmax(dim=1).detach().numpy()
+            val_outs = val_outs.argmax(dim=1)
             val_acc = compute_accuracy(val_outs, y_valid)
 
             eval_dict = {
