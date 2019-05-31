@@ -19,7 +19,7 @@ class BCAgent:
         model = CNN(history_length=history_length, n_classes=n_classes)
         model.to(device)
         self.net = model
-        self.loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor(weights).float())
+        self.loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor(weights).to(device).float())
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=lr)
 
     def update(self, X_batch, y_batch):
