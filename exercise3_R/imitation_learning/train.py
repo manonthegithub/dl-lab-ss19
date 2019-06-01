@@ -94,7 +94,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
 
-    train_p, _ = get_weights(y_train)
+    train_p, t_weights = get_weights(y_train)
     valid_p, _ = get_weights(y_valid)
     train_p = train_p[hl:]
     valid_p = valid_p[hl:]
@@ -104,7 +104,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     print("... train model")
 
     # TODO: specify your agent with the neural network in agents/bc_agent.py 
-    agent = BCAgent(device, lr=lr, history_length=hl)
+    agent = BCAgent(device, lr=lr, history_length=hl, weights=t_weights)
     tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
     # TODO: implement the training
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     # preprocess data
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
 
-    minibatches = 30000
+    minibatches = 100000
 
     # train model (you can change the parameters!)
     train_model(X_train, y_train, X_valid, y_valid, hl=hl, n_minibatches=minibatches, batch_size=batch_size, lr=1e-4)
