@@ -121,7 +121,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
         loss = agent.update(x, y)
         if i % 10 == 0:
             # compute training/ validation accuracy and write it to tensorboard
-            print("round")
+            print("round " + str(i))
             outs = agent.predict(x)
             outs = outs.argmax(dim=2)
             train_acc = compute_accuracy(outs, y)
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
     hl = 32
-    batch_size = 64
+    batch_size = 32
 
     # X_train = X_train[:100]
     # X_valid = X_valid[:100]
