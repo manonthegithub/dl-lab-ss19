@@ -120,16 +120,30 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     #         # compute training/ validation accuracy and write it to tensorboard
     #         tensorboard_eval.write_episode_data(...)
     print("Starting loop.")
-
+    lbs_sum = {
+        'str': 0,
+        'r': 0,
+        'l': 0,
+        'a': 0,
+        'b': 0
+    }
     for i in range(n_minibatches):
         x, y = sample_minibatch(X_train, y_train, batch_size, hl, t_probs)
         x = torch.tensor(x).to(device)
         y = torch.tensor(y).to(device)
         loss = agent.update(x, y)
+
         if i % 10 == 0:
             # compute training/ validation accuracy and write it to tensorboard
             print("round " + str(i))
-            print(count_labls(y[:,hl-1].cpu()))
+            lbs = count_labls(y[:, hl - 1].cpu())
+            lbs_sum['str'] += lbs['str']
+            lbs_sum['l'] += lbs['l']
+            lbs_sum['r'] += lbs['r']
+            lbs_sum['a'] += lbs['a']
+            lbs_sum['b'] += lbs['b']
+            print(lbs)
+            print(lbs_sum)
             outs = agent.predict(x)
             outs = outs.argmax(dim=2)
             train_acc = compute_accuracy(outs, y)
@@ -158,6 +172,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     # TODO: save your agent
     model_dir = agent.save(os.path.join(model_dir, "agent.pt"))
     print("Model saved in file: %s" % model_dir)
+
 
 
 def count_labls(ys):
@@ -213,7 +228,7 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 5
+    hl = 3
     lr = 1e-4
     batch_size = 32
 
