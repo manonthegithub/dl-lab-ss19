@@ -45,6 +45,7 @@ def run_episode(env, agent, hl, rendering=True, max_timesteps=1000):
         #     a = id_to_action(a.argmax(dim=1).squeeze())
         a = agent.predict(state)
         a = a.argmax(dim=2).squeeze()[hl - 1]
+        print(a)
         a = id_to_action(a)
 
         next_state, r, done, info = env.step(a)   
@@ -68,11 +69,11 @@ if __name__ == "__main__":
     # important: don't set rendering to False for evaluation (you may get corrupted state images from gym)
     rendering = True                      
 
-    hl = 128
+    hl = 10
     n_test_episodes = 15                  # number of episodes to test
 
     # TODO: load agent
-    agent = BCAgent(torch.device('cpu'), lr=0.0001, history_length=hl, weights=[1,1,1,1,1])
+    agent = BCAgent(torch.device('cpu'), lr=0.0001, history_length=hl)
     agent.load("models/agent.pt")
 
     env = gym.make('CarRacing-v0').unwrapped

@@ -77,7 +77,7 @@ def slide(data, ids, width):
 
 def sample_minibatch(X, y, batch_size, hl, probs):
     elems = X.shape[0]
-    rnd = np.random.choice(range(hl, elems),size=batch_size, replace=False, p=probs)
+    rnd = np.random.choice(range(hl, elems), size=batch_size, replace=True, p=probs)
     o_x = slide(X, rnd, hl)
     o_y = slide(y, rnd, hl)
     return o_x, o_y
@@ -213,8 +213,8 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 5
-    batch_size = 16
+    hl = 10
+    batch_size = 32
 
     # X_train = X_train[:100]
     # X_valid = X_valid[:100]
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     # preprocess data
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
 
-    minibatches = 10000
+    minibatches = 30000
 
     # train model (you can change the parameters!)
     train_model(X_train, y_train, X_valid, y_valid, hl=hl, n_minibatches=minibatches, batch_size=batch_size, lr=1e-4)
