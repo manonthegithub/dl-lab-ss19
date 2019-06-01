@@ -77,7 +77,8 @@ def slide(data, ids, width):
 
 def sample_minibatch(X, y, batch_size, hl, probs):
     elems = X.shape[0]
-    rnd = np.random.choice(range(hl, elems), size=batch_size, replace=True, p=probs)
+    # rnd = np.random.choice(range(hl, elems), size=batch_size, replace=True, p=probs)
+    rnd = np.random.uniform(low=hl, high=elems, size=batch_size)
     o_x = slide(X, rnd, hl)
     o_y = slide(y, rnd, hl)
     return o_x, o_y
@@ -104,7 +105,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     print("... train model")
 
     # TODO: specify your agent with the neural network in agents/bc_agent.py 
-    agent = BCAgent(device, lr=lr, history_length=hl)
+    agent = BCAgent(device, lr=lr, history_length=hl, weights=t_weights)
     tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
     # TODO: implement the training
