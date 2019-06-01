@@ -44,7 +44,7 @@ def run_episode(env, agent, hl, rendering=True, max_timesteps=1000):
         #     a = agent.predict(state)
         #     a = id_to_action(a.argmax(dim=1).squeeze())
         a = agent.predict(state)
-        a = a.argmax(dim=2).squeeze()[31]
+        a = a.argmax(dim=2).squeeze()[hl - 1]
         a = id_to_action(a)
 
         next_state, r, done, info = env.step(a)   
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # important: don't set rendering to False for evaluation (you may get corrupted state images from gym)
     rendering = True                      
 
-    hl = 32
+    hl = 128
     n_test_episodes = 15                  # number of episodes to test
 
     # TODO: load agent

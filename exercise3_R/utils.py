@@ -6,6 +6,12 @@ STRAIGHT = 0
 ACCELERATE =3
 BRAKE = 4
 
+LA = np.array([-1.0, 0.0, 0.0])
+RA = np.array([1.0, 0.0, 0.0])
+ACC = np.array([0.0, 1.0, 0.0])
+BRA = np.array([0, 0, 0.2], dtype='float32')
+STR = np.array([0.0, 0.0, 0.0])
+
 
 def rgb2gray(rgb):
     """ 
@@ -20,13 +26,13 @@ def action_to_id(a):
     this method discretizes the actions.
     Important: this method only works if you recorded data pressing only one key at a time!
     """
-    if all(a == [-1.0, 0.0, 0.0]): return LEFT               # LEFT: 1
-    elif all(a == [1.0, 0.0, 0.0]): return RIGHT             # RIGHT: 2
-    elif all(a == [0.0, 1.0, 0.0]): return ACCELERATE        # ACCELERATE: 3
-    elif all(a == [0.0, 0.0, 0.2]): return BRAKE             # BRAKE: 4
-    else:       
-        return STRAIGHT                                      # STRAIGHT = 0
-
+    if all(a == LA): return LEFT               # LEFT: 1
+    elif all(a == RA): return RIGHT             # RIGHT: 2
+    elif all(a == ACC): return ACCELERATE        # ACCELERATE: 3
+    elif all(a == BRA): return BRAKE             # BRAKE: 4
+    elif all(a == STR): return STRAIGHT
+    elif all(a * RA == RA): return RIGHT
+    elif all(a * RA == LA): return LEFT
 
 def id_to_action(action_id, max_speed=0.8):
     """ 
