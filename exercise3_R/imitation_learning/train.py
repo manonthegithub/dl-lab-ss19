@@ -37,11 +37,6 @@ def read_data(datasets_dir="./data", frac = 0.1):
     X = np.array(data["state"]).astype('float32')
     y = np.array(data["action"]).astype('float32')
 
-    limit = 13000
-
-    X = X[:limit]
-    y = y[:limit]
-
     # split data into training and validation set
     n_samples = X.shape[0]
     X_train, y_train = X[:int((1-frac) * n_samples)], y[:int((1-frac) * n_samples)]
@@ -64,10 +59,10 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
     X_train = rgb2gray(X_train)
     X_valid = rgb2gray(X_valid)
 
-    X_train = slide(X_train, width=history_length)
-    X_valid = slide(X_valid, width=history_length)
-    y_train = slide(y_train, width=history_length)
-    y_valid = slide(y_valid, width=history_length)
+    # X_train = slide(X_train, width=history_length)
+    # X_valid = slide(X_valid, width=history_length)
+    # y_train = slide(y_train, width=history_length)
+    # y_valid = slide(y_valid, width=history_length)
 
     # History:
     # At first you should only use the current image as input to your network to learn the next action. Then the input states
@@ -77,14 +72,15 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
 
 
 
-def slide(data, width):
-    samples = data.shape[0]
-    return np.array([data[i: i + width] for i in range(samples - width + 1)])
+def slide(data, ids, width):
+    return np.array([data[i - width:i] for i in ids])
 
-def sample_minibatch(X, y, batch_size):
+def sample_minibatch(X, y, batch_size, hl):
     elems = X.shape[0]
-    rnd = np.random.randint(elems - batch_size + 1, size=batch_size)
-    return X[rnd], y[rnd]
+    rnd = np.random.randint(low=hl, high=elems, size=batch_size)
+    o_x = slide(X, rnd, hl)
+    o_y = slide(y, rnd, hl)
+    return o_x, o_y
 
 def compute_accuracy(y_out, y_gt):
     true_preds = torch.where(y_out == y_gt, torch.tensor(1).to(device), torch.tensor(0).to(device)).sum()
@@ -104,10 +100,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     agent = BCAgent(device, lr=lr, history_length=hl, weights=weights)
     tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
-    val_bs = np.array_split(X_valid, batch_size)
-    val_ys = np.array_split(y_valid, batch_size)
-    elems = len(val_bs)
-
+    elems_val = X_valid.shape[0]
     # TODO: implement the training
     # 
     # 1. write a method sample_minibatch and perform an update step
@@ -123,7 +116,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     print("Starting loop.")
 
     for i in range(n_minibatches):
-        x, y = sample_minibatch(X_train, y_train, batch_size)
+        x, y = sample_minibatch(X_train, y_train, batch_size, hl)
         x = torch.tensor(x).to(device)
         y = torch.tensor(y).to(device)
         loss = agent.update(x, y)
@@ -135,15 +128,24 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
             train_acc = compute_accuracy(outs, y)
 
             val_acc_cum = 0
-            for ii in range(elems):
-                inp = torch.tensor(val_bs[ii]).to(device)
-                lba = torch.tensor(val_ys[ii]).to(device)
+            els = 0
+            for ii in range(hl, elems_val):
+                if ii + batch_size < elems_val:
+                    ids = range(ii, ii + batch_size)
+                else:
+                    ids = range(ii, elems_val)
+
+                x_v = slide(X_valid, ids, hl)
+                y_v = slide(y_valid, ids, hl)
+                inp = torch.tensor(x_v).to(device)
+                lba = torch.tensor(y_v).to(device)
                 val_outs = agent.predict(inp)
                 val_outs = val_outs.argmax(dim=2)
                 val_acc = compute_accuracy(val_outs, lba)
                 val_acc_cum += val_acc
+                els += 1
 
-            val_acc_cum = val_acc_cum / elems
+            val_acc_cum = val_acc_cum / els
 
             eval_dict = {
                 "loss": loss.item(),
@@ -164,8 +166,8 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 8
-    batch_size = 32
+    hl = 32
+    batch_size = 64
 
     # X_train = X_train[:100]
     # X_valid = X_valid[:100]
