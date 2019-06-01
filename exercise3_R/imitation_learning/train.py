@@ -75,9 +75,9 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
 def slide(data, ids, width):
     return np.array([data[i - width:i] for i in ids])
 
-def sample_minibatch(X, y, batch_size, hl):
+def sample_minibatch(X, y, batch_size, hl, probs):
     elems = X.shape[0]
-    rnd = np.random.randint(low=hl, high=elems, size=batch_size)
+    rnd = np.random.choice(range(hl, elems),size=batch_size, replace=False, p=probs)
     o_x = slide(X, rnd, hl)
     o_y = slide(y, rnd, hl)
     return o_x, o_y
@@ -88,16 +88,23 @@ def compute_accuracy(y_out, y_gt):
     return (true_preds.float() / all_preds).item()
 
 
-def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, lr, weights, hl = 1, model_dir="./models", tensorboard_dir="./tensorboard"):
+def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, lr, hl = 1, model_dir="./models", tensorboard_dir="./tensorboard"):
     
     # create result and model folders
     if not os.path.exists(model_dir):
-        os.mkdir(model_dir)  
+        os.mkdir(model_dir)
+
+    train_p, _ = get_weights(y_train)
+    valid_p, _ = get_weights(y_valid)
+    train_p = train_p[hl:]
+    valid_p = valid_p[hl:]
+    t_probs = train_p / train_p.sum()
+    v_probs = valid_p / valid_p.sum()
  
     print("... train model")
 
     # TODO: specify your agent with the neural network in agents/bc_agent.py 
-    agent = BCAgent(device, lr=lr, history_length=hl, weights=weights)
+    agent = BCAgent(device, lr=lr, history_length=hl)
     tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
     # TODO: implement the training
@@ -115,7 +122,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     print("Starting loop.")
 
     for i in range(n_minibatches):
-        x, y = sample_minibatch(X_train, y_train, batch_size, hl)
+        x, y = sample_minibatch(X_train, y_train, batch_size, hl, t_probs)
         x = torch.tensor(x).to(device)
         y = torch.tensor(y).to(device)
         loss = agent.update(x, y)
@@ -128,7 +135,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
 
             val_acc_cum = 0
             for ii in range(10):
-                inp, lba = sample_minibatch(X_valid, y_valid, batch_size, hl)
+                inp, lba = sample_minibatch(X_valid, y_valid, batch_size, hl, v_probs)
                 inp = torch.tensor(inp).to(device)
                 lba = torch.tensor(lba).to(device)
                 val_outs = agent.predict(inp)
@@ -152,13 +159,41 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     print("Model saved in file: %s" % model_dir)
 
 
+def get_weights(data):
+    cnt = data.shape[0]
+    stra = np.where(data == 0, 1, 0)
+    le = np.where(data == 1, 1, 0)
+    rt = np.where(data == 2, 1, 0)
+    acc = np.where(data == 3, 1, 0)
+    br = np.where(data == 4, 1, 0)
+    ws = stra.sum()
+    wl = le.sum()
+    wr = rt.sum()
+    wa = acc.sum()
+    wb = br.sum()
+    print('Straight ' + str(ws))
+    print('Left ' + str(wl))
+    print('Right ' + str(wr))
+    print('Accelerate ' + str(wa))
+    print('Break ' + str(wb))
+    weights = 1 / (np.array([ws, wl, wr, wa, wb]) / cnt)
+    print('Weights ' + str(weights))
+
+    re = np.where(stra == 1, weights[0], 0)
+    re += np.where(le == 1, weights[1], 0)
+    re += np.where(rt == 1, weights[2], 0)
+    re += np.where(acc == 1, weights[3], 0)
+    re += np.where(br == 1, weights[4], 0)
+    return re, weights
+
+
 if __name__ == "__main__":
 
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 64
-    batch_size = 8
+    hl = 16
+    batch_size = 32
 
     # X_train = X_train[:100]
     # X_valid = X_valid[:100]
@@ -168,22 +203,8 @@ if __name__ == "__main__":
     # preprocess data
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
 
-    cnt = y_train.size
-    stra = np.where(y_train == 0, 1, 0).sum()
-    le = np.where(y_train == 1, 1, 0).sum()
-    rt = np.where(y_train == 2, 1, 0).sum()
-    acc = np.where(y_train == 3, 1, 0).sum()
-    br = np.where(y_train == 4, 1, 0).sum()
-    print('Straight ' + str(stra))
-    print('Left ' + str(le))
-    print('Right ' + str(rt))
-    print('Accelerate ' + str(acc))
-    print('Break ' + str(br))
-    weights = 1 / (np.array([stra, le, rt, acc, br]) / cnt + 0.000000000001)
-    print('Weights ' + str(weights))
-
     minibatches = 100000
 
     # train model (you can change the parameters!)
-    train_model(X_train, y_train, X_valid, y_valid, hl=hl, weights=weights, n_minibatches=minibatches, batch_size=batch_size, lr=1e-4)
+    train_model(X_train, y_train, X_valid, y_valid, hl=hl, n_minibatches=minibatches, batch_size=batch_size, lr=1e-4)
  

@@ -4,13 +4,16 @@ from agent.networks import CNN
 
 class BCAgent:
 
-    def __init__(self, device, weights, lr=1e-3, history_length=1):
+    def __init__(self, device, weights= None, lr=1e-3, history_length=1):
         # TODO: Define network, loss function, optimizer
         self.n_classes = 5
         model = CNN(history_length=history_length, n_classes=self.n_classes)
         model.to(device)
         self.net = model
-        self.loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor(weights).to(device).float())
+        if weights is None:
+            self.loss_fn = torch.nn.CrossEntropyLoss()
+        else:
+            self.loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor(weights).to(device).float())
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=lr)
 
     def update(self, X_batch, y_batch):
