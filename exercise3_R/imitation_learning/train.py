@@ -104,7 +104,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     print("... train model")
 
     # TODO: specify your agent with the neural network in agents/bc_agent.py 
-    agent = BCAgent(device, lr=lr, history_length=hl, weights=t_weights)
+    agent = BCAgent(device, lr=lr, history_length=hl)
     tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
     # TODO: implement the training
@@ -213,7 +213,8 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 10
+    hl = 5
+    lr = 1e-4
     batch_size = 32
 
     # X_train = X_train[:100]
@@ -227,5 +228,5 @@ if __name__ == "__main__":
     minibatches = 100000
 
     # train model (you can change the parameters!)
-    train_model(X_train, y_train, X_valid, y_valid, hl=hl, n_minibatches=minibatches, batch_size=batch_size, lr=1e-4)
+    train_model(X_train, y_train, X_valid, y_valid, hl=hl, n_minibatches=minibatches, batch_size=batch_size, lr=lr)
  
