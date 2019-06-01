@@ -34,7 +34,7 @@ def action_to_id(a):
     elif all(a * RA == RA): return RIGHT
     elif all(a * RA == LA): return LEFT
 
-def id_to_action(action_id, max_speed=0.8):
+def id_to_action(action_id, max_speed=1.0):
     """ 
     this method makes actions continous.
     Important: this method only works if you recorded data pressing only one key at a time!
@@ -42,13 +42,13 @@ def id_to_action(action_id, max_speed=0.8):
     a = np.array([0.0, 0.0, 0.0])
 
     if action_id == LEFT:
-        return np.array([-1.0, 0.0, 0.05])
+        return np.array([-1.0, 0.0, 0.00])
     elif action_id == RIGHT:
-        return np.array([1.0, 0.0, 0.05])
+        return np.array([1.0, 0.0, 0.00])
     elif action_id == ACCELERATE:
         return np.array([0.0, max_speed, 0.0])
     elif action_id == BRAKE:
-        return np.array([0.0, 0.0, 0.1])
+        return np.array([0.0, 0.0, 0.2])
     else:
         return np.array([0.0, 0.0, 0.0])
     

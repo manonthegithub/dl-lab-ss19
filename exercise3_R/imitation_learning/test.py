@@ -45,14 +45,13 @@ def run_episode(env, agent, hl, rendering=True, max_timesteps=1000):
         #     a = id_to_action(a.argmax(dim=1).squeeze())
         a = agent.predict(state)
         a = a.argmax(dim=2).squeeze()[hl - 1]
-        print(a)
         a = id_to_action(a)
 
         next_state, r, done, info = env.step(a)   
         episode_reward += r
 
         next_state = torch.tensor(rgb2gray(next_state)).unsqueeze(0).unsqueeze(0)
-        state = torch.cat((state[:,:hl-1,:,:], next_state), dim=1)
+        state = torch.cat((state[:,1:,:,:], next_state), dim=1)
         step += 1
         
         if rendering:
