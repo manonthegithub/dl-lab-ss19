@@ -129,7 +129,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
         if i % 10 == 0:
             # compute training/ validation accuracy and write it to tensorboard
             print("round " + str(i))
-            print(count_labls(y))
+            print(count_labls(y[:,hl-1].cpu()))
             outs = agent.predict(x)
             outs = outs.argmax(dim=2)
             train_acc = compute_accuracy(outs, y)
