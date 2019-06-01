@@ -14,7 +14,7 @@ class BCAgent:
             self.loss_fn = torch.nn.CrossEntropyLoss()
         else:
             self.loss_fn = torch.nn.CrossEntropyLoss(weight=torch.tensor(weights).to(device).float())
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=lr)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=lr, weight_decay=0.1, eps=1e-7)
 
     def update(self, X_batch, y_batch):
         # TODO: transform input to tensors
