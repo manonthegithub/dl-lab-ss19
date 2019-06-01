@@ -100,7 +100,6 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     agent = BCAgent(device, lr=lr, history_length=hl, weights=weights)
     tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
-    elems_val = X_valid.shape[0]
     # TODO: implement the training
     # 
     # 1. write a method sample_minibatch and perform an update step
@@ -128,24 +127,16 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
             train_acc = compute_accuracy(outs, y)
 
             val_acc_cum = 0
-            els = 0
-            for ii in range(hl, elems_val):
-                if ii + batch_size < elems_val:
-                    ids = range(ii, ii + batch_size)
-                else:
-                    ids = range(ii, elems_val)
-
-                x_v = slide(X_valid, ids, hl)
-                y_v = slide(y_valid, ids, hl)
-                inp = torch.tensor(x_v).to(device)
-                lba = torch.tensor(y_v).to(device)
+            for ii in range(10):
+                inp, lba = sample_minibatch(X_valid, y_valid, batch_size, hl)
+                inp = torch.tensor(inp).to(device)
+                lba = torch.tensor(lba).to(device)
                 val_outs = agent.predict(inp)
                 val_outs = val_outs.argmax(dim=2)
                 val_acc = compute_accuracy(val_outs, lba)
                 val_acc_cum += val_acc
-                els += 1
 
-            val_acc_cum = val_acc_cum / els
+            val_acc_cum = val_acc_cum / 10
 
             eval_dict = {
                 "loss": loss.item(),
