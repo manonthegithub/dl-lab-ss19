@@ -78,7 +78,7 @@ def slide(data, ids, width):
 def sample_minibatch(X, y, batch_size, hl, probs):
     elems = X.shape[0]
     # rnd = np.random.choice(range(hl, elems), size=batch_size, replace=True, p=probs)
-    rnd = np.random.uniform(low=hl, high=elems, size=batch_size)
+    rnd = np.random.randint(low=hl, high=elems, size=batch_size)
     o_x = slide(X, rnd, hl)
     o_y = slide(y, rnd, hl)
     return o_x, o_y
