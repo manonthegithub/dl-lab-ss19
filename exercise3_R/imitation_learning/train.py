@@ -129,6 +129,7 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
         if i % 10 == 0:
             # compute training/ validation accuracy and write it to tensorboard
             print("round " + str(i))
+            print(count_labls(y))
             outs = agent.predict(x)
             outs = outs.argmax(dim=2)
             train_acc = compute_accuracy(outs, y)
@@ -158,6 +159,26 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     model_dir = agent.save(os.path.join(model_dir, "agent.pt"))
     print("Model saved in file: %s" % model_dir)
 
+
+def count_labls(ys):
+    stra = np.where(ys == 0, 1, 0)
+    le = np.where(ys == 1, 1, 0)
+    rt = np.where(ys == 2, 1, 0)
+    acc = np.where(ys == 3, 1, 0)
+    br = np.where(ys == 4, 1, 0)
+    ws = stra.sum()
+    wl = le.sum()
+    wr = rt.sum()
+    wa = acc.sum()
+    wb = br.sum()
+    di = {
+        'str': ws,
+        'r': wr,
+        'l': wl,
+        'a': wa,
+        'b': wb
+    }
+    return di
 
 def get_weights(data):
     cnt = data.shape[0]
@@ -193,7 +214,7 @@ if __name__ == "__main__":
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
     hl = 5
-    batch_size = 64
+    batch_size = 16
 
     # X_train = X_train[:100]
     # X_valid = X_valid[:100]
