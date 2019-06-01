@@ -228,7 +228,7 @@ if __name__ == "__main__":
     # read data    
     X_train, y_train, X_valid, y_valid = read_data("./data")
 
-    hl = 3
+    hl = 10
     lr = 1e-4
     batch_size = 32
 
