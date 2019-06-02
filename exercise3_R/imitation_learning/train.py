@@ -28,19 +28,30 @@ def read_data(datasets_dir="./data", frac = 0.1):
     and splits it into training/ validation set.
     """
     print("... read data")
-    data_file = os.path.join(datasets_dir, 'data.pkl.gzip')
-  
-    f = gzip.open(data_file, 'rb')
-    data = pickle.load(f)
+    data_files = [
+        'data.pkl_o.gzip',
+        'data.pkl_cp.gzip'
+    ]
+
+    state = []
+    action = []
+    for fl in data_files:
+        data_file = os.path.join(datasets_dir, fl)
+        f = gzip.open(data_file, 'rb')
+        data = pickle.load(f)
+        state += data['state']
+        action += data['action']
 
     # get images as features and actions as targets
-    X = np.array(data["state"]).astype('float32')
-    y = np.array(data["action"]).astype('float32')
+    X = np.array(state).astype('float32')
+    y = np.array(action).astype('float32')
 
     # split data into training and validation set
     n_samples = X.shape[0]
     X_train, y_train = X[:int((1-frac) * n_samples)], y[:int((1-frac) * n_samples)]
     X_valid, y_valid = X[int((1-frac) * n_samples):], y[int((1-frac) * n_samples):]
+    print(X_train.shape)
+    print(X_valid.shape)
     return X_train, y_train, X_valid, y_valid
 
 
@@ -49,21 +60,10 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
     # 1. convert the images in X_train/X_valid to gray scale. If you use rgb2gray() from utils.py, the output shape (96, 96, 1)
     # 2. you can train your model with discrete actions (as you get them from read_data) by discretizing the action space 
     #    using action_to_id() from utils.py.
-
-    # y_train = action_to_id(y_train)
-    # y_valid = action_to_id(y_valid)
     y_train = np.array([action_to_id(y_train[i]) for i in range(y_train.shape[0])])
     y_valid = np.array([action_to_id(y_valid[i]) for i in range(y_valid.shape[0])])
-
-
     X_train = rgb2gray(X_train)
     X_valid = rgb2gray(X_valid)
-
-    # X_train = slide(X_train, width=history_length)
-    # X_valid = slide(X_valid, width=history_length)
-    # y_train = slide(y_train, width=history_length)
-    # y_valid = slide(y_valid, width=history_length)
-
     # History:
     # At first you should only use the current image as input to your network to learn the next action. Then the input states
     # have shape (96, 96, 1). Later, add a history of the last N images to your state so that a state has shape (96, 96, N).

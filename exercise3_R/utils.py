@@ -1,6 +1,6 @@
 import numpy as np
 
-LEFT =1
+LEFT = 1
 RIGHT = 2
 STRAIGHT = 0
 ACCELERATE =3
@@ -39,7 +39,6 @@ def id_to_action(action_id, max_speed=1.0):
     this method makes actions continous.
     Important: this method only works if you recorded data pressing only one key at a time!
     """
-    a = np.array([0.0, 0.0, 0.0])
 
     if action_id == LEFT:
         return np.array([-1.0, 0.0, 0.00])
@@ -49,7 +48,7 @@ def id_to_action(action_id, max_speed=1.0):
         return np.array([0.0, max_speed, 0.0])
     elif action_id == BRAKE:
         return np.array([0.0, 0.0, 0.2])
-    else:
+    elif action_id == STRAIGHT:
         return np.array([0.0, 0.0, 0.0])
     
 
