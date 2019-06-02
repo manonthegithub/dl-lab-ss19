@@ -77,8 +77,8 @@ def slide(data, ids, width):
 
 def sample_minibatch(X, y, batch_size, hl, probs):
     elems = X.shape[0]
-    # rnd = np.random.choice(range(hl, elems), size=batch_size, replace=True, p=probs)
-    rnd = np.random.randint(low=hl, high=elems, size=batch_size)
+    rnd = np.random.choice(range(hl, elems), size=batch_size, replace=True, p=probs)
+    # rnd = np.random.randint(low=hl, high=elems, size=batch_size)
     o_x = slide(X, rnd, hl)
     o_y = slide(y, rnd, hl)
     return o_x, o_y
@@ -95,17 +95,15 @@ def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, l
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
 
-    train_p, t_weights = get_weights(y_train)
-    valid_p, _ = get_weights(y_valid)
-    train_p = train_p[hl:]
-    valid_p = valid_p[hl:]
+    train_p, t_weights = get_weights(y_train, hl)
+    valid_p, _ = get_weights(y_valid, hl)
     t_probs = train_p / train_p.sum()
     v_probs = valid_p / valid_p.sum()
  
     print("... train model")
 
     # TODO: specify your agent with the neural network in agents/bc_agent.py 
-    agent = BCAgent(device, lr=lr, history_length=hl, weights=t_weights)
+    agent = BCAgent(device, lr=lr, history_length=hl)
     tensorboard_eval = Evaluation(tensorboard_dir, "imitation_learning", stats=['loss', 'train_accuracy', 'validation_accuracy'])
 
     # TODO: implement the training
@@ -196,7 +194,8 @@ def count_labls(ys):
     }
     return di
 
-def get_weights(data):
+def get_weights(data, hl):
+    data = data[hl:]
     cnt = data.shape[0]
     stra = np.where(data == 0, 1, 0)
     le = np.where(data == 1, 1, 0)
@@ -241,7 +240,7 @@ if __name__ == "__main__":
     # preprocess data
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
 
-    minibatches = 100000
+    minibatches = 200000
 
     # train model (you can change the parameters!)
     train_model(X_train, y_train, X_valid, y_valid, hl=hl, n_minibatches=minibatches, batch_size=batch_size, lr=lr)
