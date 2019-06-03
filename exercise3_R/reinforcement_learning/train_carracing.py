@@ -121,7 +121,7 @@ def train_online(env, agent, eval_cycle, num_episodes, history_length=0, model_d
 
         # store model.
         if i % eval_cycle == 0 or (i >= num_episodes - 1):
-            print(agent.save(agent.sess, os.path.join(model_dir, "dqn_agent.ckpt")))
+            print(agent.save(os.path.join(model_dir, "dqn_agent.ckpt")))
 
     tensorboard_t.close_session()
     tensorboard_e.close_session()
