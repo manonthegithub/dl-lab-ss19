@@ -17,7 +17,6 @@ def run_episode(env, agent, deterministic, skip_frames=5,  do_training=True, ren
     deterministic == True => agent executes only greedy actions according the Q function approximator (no random actions).
     do_training == True => train agent
     """
-    print('eval ccl' + str(eval_cycle))
     stats = EpisodeStats()
 
     # Save history
@@ -33,15 +32,22 @@ def run_episode(env, agent, deterministic, skip_frames=5,  do_training=True, ren
     state = state_preprocessing(state)
     image_hist.extend([state] * (history_length + 1))
     state = np.array(image_hist)
-    
+    actions = {
+        0 : 0,
+        1 : 0,
+        2 : 0,
+        3 : 0,
+        4 : 0
+    }
     while True:
 
         # TODO: get action_id from agent
         # Hint: adapt the probabilities of the 5 actions for random sampling so that the agent explores properly. 
         # action_id = agent.act(...)
         # action = your_id_to_action_method(...)
-        action_id = agent.act(state=state, deterministic=deterministic, p=[0.375, 0.15, 0.15, 0.2, 0.125])
+        action_id = agent.act(state=state, deterministic=deterministic, p=[0.45, 0.2, 0.2, 0.1, 0.05])
         action = id_to_action(action_id)
+        actions[action_id] += 1
 
         # Hint: frame skipping might help you to get better results.
         reward = 0
@@ -71,6 +77,7 @@ def run_episode(env, agent, deterministic, skip_frames=5,  do_training=True, ren
             break
 
         step += 1
+    print('Actions stats ' + str(actions))
 
     return stats
 
