@@ -109,7 +109,7 @@ def train_online(env, agent, eval_cycle, num_episodes, history_length=0, model_d
         #    for j in range(num_eval_episodes):
         #       ...
         if i % eval_cycle == 0:
-            for j in range(num_eval_episodes):
+            for j in range(eval_cycle):
                 stats = run_episode(env, agent, history_length=history_length, max_timesteps=max_ts, deterministic=True, do_training=False)
                 tensorboard_e.write_episode_data(i, eval_dict={"episode_reward": stats.episode_reward,
                                                                "straight": stats.get_action_usage(STRAIGHT),
