@@ -30,6 +30,7 @@ def read_data(datasets_dir="./data", frac = 0.1):
     print("... read data")
     data_files = [
         'data.pkl_o.gzip',
+        'data.pkl_o1.gzip',
         'data.pkl_cp.gzip'
     ]
 

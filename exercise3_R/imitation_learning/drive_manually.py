@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
             env.render()
             if done:
-                if args.collect_data and episode_reward > 900:
+                if args.collect_data and episode_reward > 800:
                     print('... saving data')
                     samples["state"] += states  # state has shape (96, 96, 3)
                     samples["action"] += actions  # action has shape (1, 3)
