@@ -12,16 +12,21 @@ if __name__ == "__main__":
 
     env = gym.make("CarRacing-v0").unwrapped
 
-    history_length =  0
+    num_actions = 5
+    hl = 10
 
     #TODO: Define networks and load agent
     # ....
+    Q = CNN(history_length=hl, n_classes=num_actions)
+    Q_target = CNN(history_length=hl, n_classes=num_actions)
+    agent = DQNAgent(Q, Q_target, num_actions, gamma=0.95, batch_size=64, epsilon=0.1, tau=0.01, lr=1e-4, history_length=hl)
+    agent.load("models_carracing/dqn_agent.ckpt")
 
     n_test_episodes = 15
 
     episode_rewards = []
     for i in range(n_test_episodes):
-        stats = run_episode(env, agent, deterministic=True, do_training=False, rendering=True)
+        stats = run_episode(env, agent, history_length=hl, deterministic=True, do_training=False, rendering=True)
         episode_rewards.append(stats.episode_reward)
 
     # save results in a dictionary and write them into a .json file

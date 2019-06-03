@@ -10,6 +10,7 @@ class ReplayBuffer:
 
     # Replay buffer for experience replay. Stores transitions.
     def __init__(self):
+        self.cap = 1e4
         self._data = namedtuple("ReplayBuffer", ["states", "actions", "next_states", "rewards", "dones"])
         self._data = self._data(states=[], actions=[], next_states=[], rewards=[], dones=[])
 
@@ -17,6 +18,13 @@ class ReplayBuffer:
         """
         This method adds a transition to the replay buffer.
         """
+        if(len(self._data.states) >= self.cap):
+            self._data[0].pop()
+            self._data[1].pop()
+            self._data[2].pop()
+            self._data[3].pop()
+            self._data[4].pop()
+
         self._data.states.append(state)
         self._data.actions.append(action)
         self._data.next_states.append(next_state)

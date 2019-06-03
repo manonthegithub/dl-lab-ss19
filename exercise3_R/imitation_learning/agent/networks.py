@@ -17,7 +17,7 @@ class CNN(nn.Module):
         # self.sbs2 = torch.nn.AvgPool2d(kernel_size=2)
         # self.linear = torch.nn.Linear(in_features=5*5, out_features=n_classes)
         self.cnn1 = torch.nn.Conv2d(in_channels=history_length, out_channels=history_length, kernel_size=3)
-        self.sbs1 = torch.nn.AvgPool2d(kernel_size=2)
+        self.sbs1 = torch.nn.MaxPool2d(kernel_size=2)
         self.lstm = torch.nn.LSTM(input_size=47*47, hidden_size=15*15, batch_first=True)
         self.sbs2 = torch.nn.AvgPool2d(kernel_size=2)
         self.linear = torch.nn.Linear(in_features=7*7, out_features=n_classes)

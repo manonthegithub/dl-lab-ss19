@@ -15,6 +15,14 @@ if __name__ == "__main__":
 
     # TODO: load DQN agent
     # ...
+    state_dim = 4
+    num_actions = 2
+
+    Q = MLP(state_dim, num_actions)
+    Q_target = MLP(state_dim, num_actions)
+    agent = DQNAgent(Q, Q_target, num_actions, gamma=0.95, batch_size=64, epsilon=0.1, tau=0.01, lr=1e-4)
+    agent.load("models_cartpole/dqn_agent.pt")
+
  
     n_test_episodes = 15
 
