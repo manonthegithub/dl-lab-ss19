@@ -148,12 +148,17 @@ if __name__ == "__main__":
 
     hl = 9
     num_actions = 5
+
+    model_dir = "./models_carracing"
     
     # TODO: Define Q network, target network and DQN agent
     # ...
     Q = CNN(history_length=hl + 1, n_classes=num_actions)
     Q_target = CNN(history_length=hl + 1, n_classes=num_actions)
     agent = DQNAgent(Q, Q_target, num_actions, gamma=0.95, batch_size=64, epsilon=0.1, tau=0.01, lr=1e-4)
+    fn = os.path.join(model_dir, 'dqn_agent.ckpt')
+    if os.path.exists(fn):
+        agent.load(fn)
 
-    train_online(env, agent, eval_cycle, num_episodes=num_eval_episodes, history_length=hl, model_dir="./models_carracing", )
+    train_online(env, agent, eval_cycle, num_episodes=num_eval_episodes, history_length=hl, model_dir=model_dir)
 
