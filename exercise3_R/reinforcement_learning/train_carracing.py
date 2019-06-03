@@ -11,13 +11,13 @@ from agent.networks import CNN
 from tensorboard_evaluation import *
 from utils import EpisodeStats
 
-def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, rendering=False, max_timesteps=1000, history_length=0):
+def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, rendering=True, max_timesteps=1000, history_length=0):
     """
     This methods runs one episode for a gym environment. 
     deterministic == True => agent executes only greedy actions according the Q function approximator (no random actions).
     do_training == True => train agent
     """
-
+    print('eval ccl' + str(eval_cycle))
     stats = EpisodeStats()
 
     # Save history
@@ -40,7 +40,7 @@ def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, ren
         # Hint: adapt the probabilities of the 5 actions for random sampling so that the agent explores properly. 
         # action_id = agent.act(...)
         # action = your_id_to_action_method(...)
-        action_id = agent.act(state=state, deterministic=deterministic, p=[0.5, 0.175, 0.150, 0.150, 0.025])
+        action_id = agent.act(state=state, deterministic=deterministic, p=[0.2, 0.175, 0.175, 0.375, 0.075])
         action = id_to_action(action_id)
 
         # Hint: frame skipping might help you to get better results.
@@ -75,7 +75,7 @@ def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, ren
     return stats
 
 
-def train_online(env, agent, num_episodes, history_length=0, model_dir="./models_carracing", tensorboard_dir="./tensorboard"):
+def train_online(env, agent, eval_cycle, num_episodes, history_length=0, model_dir="./models_carracing", tensorboard_dir="./tensorboard"):
    
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
@@ -145,5 +145,5 @@ if __name__ == "__main__":
     Q_target = CNN(history_length=hl + 1, n_classes=num_actions)
     agent = DQNAgent(Q, Q_target, num_actions, gamma=0.95, batch_size=64, epsilon=0.1, tau=0.01, lr=1e-4)
 
-    train_online(env, agent, num_episodes=num_eval_episodes, history_length=hl, model_dir="./models_carracing")
+    train_online(env, agent, eval_cycle, num_episodes=num_eval_episodes, history_length=hl, model_dir="./models_carracing", )
 
