@@ -10,9 +10,11 @@ else:
 
 device = torch.device(DEVICE)
 
+
 def soft_update(target, source, tau):
-  for target_param, param in zip(target.parameters(), source.parameters()):
-    target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+    for target_param, param in zip(target.parameters(), source.parameters()):
+        target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+
 
 class DQNAgent:
 
@@ -38,7 +40,7 @@ class DQNAgent:
 
         # define replay buffer
         self.replay_buffer = ReplayBuffer()
-        
+
         # parameters
         self.batch_size = batch_size
         self.gamma = gamma
@@ -50,13 +52,13 @@ class DQNAgent:
 
         self.num_actions = num_actions
 
-
     def train(self, state, action, next_state, reward, terminal):
         """
         This method stores a transition to the replay buffer and updates the Q networks.
         """
         self.replay_buffer.add_transition(state, action, next_state, reward, terminal)
-        batch_states, batch_actions, batch_next_states, batch_rewards, batch_dones = self.replay_buffer.next_batch(self.batch_size)
+        batch_states, batch_actions, batch_next_states, batch_rewards, batch_dones = self.replay_buffer.next_batch(
+            self.batch_size)
 
         batch_states = torch.tensor(batch_states).to(device).float()
         batch_next_states = torch.tensor(batch_next_states).to(device).float()
@@ -73,7 +75,7 @@ class DQNAgent:
             td_target = batch_rewards + self.gamma * a * batch_dones
             out = self.Q(batch_states)[range(batch_actions.shape[0]), batch_actions]
         else:
-            a = vs[:,vs.shape[1] -1,:].max(dim=1)[0]
+            a = vs[:, vs.shape[1] - 1, :].max(dim=1)[0]
             td_target = batch_rewards + self.gamma * a * batch_dones
             out = self.Q(batch_states)[range(batch_actions.shape[0]), batch_states.shape[1] - 1, batch_actions]
 
@@ -91,7 +93,6 @@ class DQNAgent:
         #              self.Q.update(...)
         #       2.3 call soft update for target network
         #              self.Q_target.update(...)
-   
 
     def act(self, state, deterministic, p):
         """
@@ -107,7 +108,7 @@ class DQNAgent:
         if deterministic or r > self.epsilon:
             # TODO: take greedy action (argmax)
             vs = self.Q(state)
-            if(len(vs.shape)) == 2:
+            if (len(vs.shape)) == 2:
                 action_id = vs.argmax(dim=1)[0].item()
             else:
                 action_id = vs.argmax(dim=2)[0][vs.shape[1] - 1].item()
