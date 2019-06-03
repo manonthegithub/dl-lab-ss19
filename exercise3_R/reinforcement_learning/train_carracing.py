@@ -11,7 +11,7 @@ from agent.networks import CNN
 from tensorboard_evaluation import *
 from utils import EpisodeStats
 
-def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, rendering=True, max_timesteps=1000, history_length=0):
+def run_episode(env, agent, deterministic, skip_frames=5,  do_training=True, rendering=True, max_timesteps=1000, history_length=0):
     """
     This methods runs one episode for a gym environment. 
     deterministic == True => agent executes only greedy actions according the Q function approximator (no random actions).
@@ -79,8 +79,8 @@ def train_online(env, agent, eval_cycle, num_episodes, history_length=0, model_d
    
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
-
     max_ts = 1000
+    ts = 100
  
     print("... train agent")
     tensorboard_t = Evaluation(os.path.join(tensorboard_dir, "train"),'train', ["episode_reward", "straight", "left", "right", "accel", "brake"])
@@ -91,7 +91,7 @@ def train_online(env, agent, eval_cycle, num_episodes, history_length=0, model_d
 
         # Hint: you can keep the episodes short in the beginning by changing max_timesteps (otherwise the car will spend most of the time out of the track)
        
-        stats = run_episode(env, agent, history_length=history_length, max_timesteps=max_ts, deterministic=False, do_training=True)
+        stats = run_episode(env, agent, history_length=history_length, max_timesteps=ts, deterministic=False, do_training=True)
 
         tensorboard_t.write_episode_data(i, eval_dict={ "episode_reward" : stats.episode_reward,
                                                       "straight" : stats.get_action_usage(STRAIGHT),
@@ -110,7 +110,7 @@ def train_online(env, agent, eval_cycle, num_episodes, history_length=0, model_d
         #       ...
         if i % eval_cycle == 0:
             for j in range(eval_cycle):
-                stats = run_episode(env, agent, history_length=history_length, max_timesteps=max_ts, deterministic=True, do_training=False)
+                stats = run_episode(env, agent, history_length=history_length, max_timesteps=ts, deterministic=True, do_training=False)
                 tensorboard_e.write_episode_data(i, eval_dict={"episode_reward": stats.episode_reward,
                                                                "straight": stats.get_action_usage(STRAIGHT),
                                                                "left": stats.get_action_usage(LEFT),
@@ -122,6 +122,9 @@ def train_online(env, agent, eval_cycle, num_episodes, history_length=0, model_d
         # store model.
         if i % eval_cycle == 0 or (i >= num_episodes - 1):
             print(agent.save(os.path.join(model_dir, "dqn_agent.ckpt")))
+
+        if ts < max_ts:
+            ts += 2
 
     tensorboard_t.close_session()
     tensorboard_e.close_session()
