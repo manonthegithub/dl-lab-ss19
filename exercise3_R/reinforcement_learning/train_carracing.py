@@ -100,7 +100,7 @@ def train_online(env, agent, num_episodes, history_length=0, model_dir="./models
                                                       "accel" : stats.get_action_usage(ACCELERATE),
                                                       "brake" : stats.get_action_usage(BRAKE)
                                                       })
-        print(stats.episode_reward)
+        print('Reward ' + str(stats.episode_reward))
 
         # TODO: evaluate your agent every 'eval_cycle' episodes using run_episode(env, agent, deterministic=True, do_training=False) to 
         # check its performance with greedy actions only. You can also use tensorboard to plot the mean episode reward.
