@@ -103,6 +103,7 @@ class DQNAgent:
         Returns:
             action id
         """
+        self.Q.eval()
         state = torch.tensor(state).to(device).float().unsqueeze(0)
         r = np.random.uniform()
         if deterministic or r > self.epsilon:
