@@ -45,7 +45,7 @@ def run_episode(env, agent, deterministic, skip_frames=5,  do_training=True, ren
         # Hint: adapt the probabilities of the 5 actions for random sampling so that the agent explores properly. 
         # action_id = agent.act(...)
         # action = your_id_to_action_method(...)
-        action_id = agent.act(state=state, deterministic=deterministic, p=[0.35, 0.2, 0.2, 0.05, 0.2])
+        action_id = agent.act(state=state, deterministic=deterministic, p=[0.30, 0.2, 0.2, 0.1, 0.2])
         action = id_to_action(action_id)
         actions[action_id] += 1
 
