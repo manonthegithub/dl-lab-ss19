@@ -115,16 +115,33 @@ def train_online(env, agent, eval_cycle, num_episodes, history_length=0, model_d
         # if i % eval_cycle == 0:
         #    for j in range(num_eval_episodes):
         #       ...
+
         if i % eval_cycle == 0:
-            for j in range(eval_cycle):
+            cum_stats = {
+                "episode_reward": 0.0,
+                "straight": 0.0,
+                "left": 0.0,
+                "right": 0.0,
+                "accel": 0.0,
+                "brake": 0.0
+            }
+            runs = 5
+            for j in range(runs):
                 stats = run_episode(env, agent, history_length=history_length, max_timesteps=ts, deterministic=True, do_training=False)
-                tensorboard_e.write_episode_data(i, eval_dict={"episode_reward": stats.episode_reward,
-                                                               "straight": stats.get_action_usage(STRAIGHT),
-                                                               "left": stats.get_action_usage(LEFT),
-                                                               "right": stats.get_action_usage(RIGHT),
-                                                               "accel": stats.get_action_usage(ACCELERATE),
-                                                               "brake": stats.get_action_usage(BRAKE)
-                                                               })
+                cum_stats['episode_reward'] += stats.episode_reward
+                cum_stats['straight'] += stats.get_action_usage(STRAIGHT)
+                cum_stats['left'] += stats.get_action_usage(LEFT)
+                cum_stats['right'] += stats.get_action_usage(RIGHT)
+                cum_stats['accel'] += stats.get_action_usage(ACCELERATE)
+                cum_stats['brake'] += stats.get_action_usage(BRAKE)
+            cum_stats['episode_reward'] /= runs
+            cum_stats['straight'] /= runs
+            cum_stats['left'] /= runs
+            cum_stats['right'] /= runs
+            cum_stats['accel'] /= runs
+            cum_stats['brake'] /=runs
+            print(cum_stats)
+            tensorboard_e.write_episode_data(i, eval_dict=cum_stats)
 
         # store model.
         if i % eval_cycle == 0 or (i >= num_episodes - 1):
