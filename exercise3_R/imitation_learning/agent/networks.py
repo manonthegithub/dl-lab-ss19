@@ -27,12 +27,10 @@ class CNN(nn.Module):
     def forward(self, x):
         # TODO: compute forward pass
         x = self.cnn1(x)
-        x = self.drp(x)
         x = self.sbs1(x)
         x, _ = self.lstm(x.view(x.shape[0], x.shape[1], -1))
         # x = self.sbs2(x.view(x.shape[0], x.shape[1], 10, 10))
         x = self.sbs2(x.view(x.shape[0], x.shape[1], self.lstm_hiden,self.lstm_hiden))
-        x = self.drp2(x)
         x = self.linear(x.view(x.shape[0], x.shape[1], -1))
         return x
 
