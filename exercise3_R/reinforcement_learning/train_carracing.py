@@ -131,7 +131,7 @@ def train_online(env, agent, eval_cycle, num_episodes, history_length=0, model_d
             print(agent.save(os.path.join(model_dir, "dqn_agent.ckpt")))
 
         if ts < max_ts:
-            ts += 2
+            ts += 3
 
     tensorboard_t.close_session()
     tensorboard_e.close_session()
