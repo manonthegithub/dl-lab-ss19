@@ -17,8 +17,9 @@ class CNN(nn.Module):
         # self.sbs2 = torch.nn.AvgPool2d(kernel_size=2)
         # self.linear = torch.nn.Linear(in_features=5*5, out_features=n_classes)
         self.cnn1 = torch.nn.Conv2d(in_channels=history_length, out_channels=history_length, kernel_size=3)
-        self.sbs1 = torch.nn.MaxPool2d(kernel_size=4)
-        self.lstm = torch.nn.LSTM(input_size=23*23, hidden_size=15*15, dropout=0.2, batch_first=True)
+        self.drp = torch.nn.Dropout2d(0.2)
+        self.sbs1 = torch.nn.MaxPool2d(kernel_size=4, stride=2)
+        self.lstm = torch.nn.LSTM(input_size=23*23, hidden_size=15*15, batch_first=True)
         self.sbs2 = torch.nn.AvgPool2d(kernel_size=4, stride=2)
         self.linear = torch.nn.Linear(in_features=6*6, out_features=n_classes)
 
@@ -26,6 +27,7 @@ class CNN(nn.Module):
     def forward(self, x):
         # TODO: compute forward pass
         x = self.cnn1(x)
+        x = self.drp(x)
         x = self.sbs1(x)
         x, _ = self.lstm(x.view(x.shape[0], x.shape[1], -1))
         # x = self.sbs2(x.view(x.shape[0], x.shape[1], 10, 10))
