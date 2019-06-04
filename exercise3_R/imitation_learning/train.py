@@ -241,7 +241,7 @@ if __name__ == "__main__":
     # preprocess data
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=hl)
 
-    minibatches = 100000
+    minibatches = 50000
 
     # train model (you can change the parameters!)
     train_model(X_train, y_train, X_valid, y_valid, hl=hl, n_minibatches=minibatches, batch_size=batch_size, lr=lr)
