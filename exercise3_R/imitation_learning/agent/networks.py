@@ -19,8 +19,8 @@ class CNN(nn.Module):
         self.cnn1 = torch.nn.Conv2d(in_channels=history_length, out_channels=history_length, kernel_size=3)
         self.drp = torch.nn.Dropout2d(0.2)
         self.sbs1 = torch.nn.MaxPool2d(kernel_size=4, stride=2)
-        self.lstm = torch.nn.LSTM(input_size=23*23, hidden_size=15*15, batch_first=True)
-        self.sbs2 = torch.nn.AvgPool2d(kernel_size=4, stride=2)
+        self.lstm = torch.nn.LSTM(input_size=46*46, hidden_size=15*15, batch_first=True)
+        self.sbs2 = torch.nn.AvgPool2d(kernel_size=2, stride=1)
         self.linear = torch.nn.Linear(in_features=6*6, out_features=n_classes)
 
 
