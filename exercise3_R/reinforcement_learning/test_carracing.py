@@ -13,7 +13,7 @@ if __name__ == "__main__":
     env = gym.make("CarRacing-v0").unwrapped
 
     num_actions = 5
-    hl = 10
+    hl = 9
 
     #TODO: Define networks and load agent
     # ....
