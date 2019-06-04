@@ -11,7 +11,7 @@ from agent.networks import CNN
 from tensorboard_evaluation import *
 from utils import EpisodeStats
 
-def run_episode(env, agent, deterministic, skip_frames=5,  do_training=True, rendering=True, max_timesteps=1000, history_length=0):
+def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, rendering=True, max_timesteps=1000, history_length=0):
     """
     This methods runs one episode for a gym environment. 
     deterministic == True => agent executes only greedy actions according the Q function approximator (no random actions).
