@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # ....
     Q = CNN(history_length=hl, n_classes=num_actions)
     Q_target = CNN(history_length=hl, n_classes=num_actions)
-    agent = DQNAgent(Q, Q_target, num_actions, gamma=0.95, batch_size=64, epsilon=0.1, tau=0.01, lr=1e-4, history_length=hl)
+    agent = DQNAgent(Q, Q_target, num_actions, gamma=0.95, batch_size=64, epsilon=0.1, tau=0.01, lr=1e-4)
     agent.load("models_carracing/dqn_agent.ckpt")
 
     n_test_episodes = 15
