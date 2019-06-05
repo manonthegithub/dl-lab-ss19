@@ -43,7 +43,7 @@ def run_episode(env, agent, deterministic, do_training=True, rendering=False, ma
 
     return stats
 
-def train_online(env, agent, num_episodes, eval_cycle, model_dir="./models_cartpole", tensorboard_dir="./tensorboard"):
+def train_online(env, agent, num_episodes, num_eval_episodes, eval_cycle, model_dir="./models_cartpole", tensorboard_dir="./tensorboard"):
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)  
  
@@ -72,11 +72,24 @@ def train_online(env, agent, num_episodes, eval_cycle, model_dir="./models_cartp
         #    for j in range(num_eval_episodes):
         #       ...
         if i % eval_cycle == 0:
+
+            res = {
+                "episode_reward": stats.episode_reward,
+                "a_0": stats.get_action_usage(0),
+                "a_1": stats.get_action_usage(1)
+            }
+
             for j in range(num_eval_episodes):
                 stats = run_episode(env, agent, deterministic=True, do_training=False)
-                tensorboard_e.write_episode_data(j, eval_dict={"episode_reward": stats.episode_reward,
-                                                             "a_0": stats.get_action_usage(0),
-                                                             "a_1": stats.get_action_usage(1)})
+                res['episode_reward'] += stats.episode_reward
+                res['a_0'] += stats.get_action_usage(0)
+                res['a_1'] += stats.get_action_usage(1)
+
+            res['episode_reward'] /= num_eval_episodes
+            res['a_0'] /= num_eval_episodes
+            res['a_1'] /= num_eval_episodes
+
+            tensorboard_e.write_episode_data(j, eval_dict=res)
 
         # store model.
         if i % eval_cycle == 0 or i >= (num_episodes - 1):
@@ -88,8 +101,9 @@ def train_online(env, agent, num_episodes, eval_cycle, model_dir="./models_cartp
 
 if __name__ == "__main__":
 
-    num_eval_episodes = 200   # evaluate on 5 episodes
+    num_eval_episodes = 5   # evaluate on 5 episodes
     eval_cycle = 20         # evaluate every 10 episodes
+    num_episodes = 200
 
     # You find information about cartpole in 
     # https://github.com/openai/gym/wiki/CartPole-v0
@@ -104,7 +118,7 @@ if __name__ == "__main__":
     Q_target = MLP(state_dim, num_actions)
     agent = DQNAgent(Q, Q_target, num_actions, gamma=0.95, batch_size=64, epsilon=0.1, tau=0.01, lr=1e-4)
 
-    train_online(env, agent, num_eval_episodes, eval_cycle)
+    train_online(env, agent, num_episodes, num_eval_episodes, eval_cycle)
 
     # TODO: 
     # 1. init Q network and target network (see dqn/networks.py)
