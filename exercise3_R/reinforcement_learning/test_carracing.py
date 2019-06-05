@@ -7,7 +7,7 @@ from agent.networks import *
 import numpy as np
 import os
 import json
-import datetime.datetime as datetime
+import datetime
 
 np.random.seed(0)
 
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     if not os.path.exists("./results"):
         os.mkdir("./results")  
 
-    fname = "./results/carracing_results_dqn-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
+    fname = "./results/carracing_results_dqn-%s.json" % datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     fh = open(fname, "w")
     json.dump(results, fh)
             
