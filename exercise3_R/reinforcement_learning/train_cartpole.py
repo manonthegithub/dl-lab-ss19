@@ -23,7 +23,7 @@ def run_episode(env, agent, deterministic, do_training=True, rendering=False, ma
     step = 0
     while True:
         
-        action_id = agent.act(state=state, deterministic=deterministic, p=[0.5, 0.5])
+        action_id, _ = agent.act(state=state, deterministic=deterministic, p=[0.5, 0.5])
         next_state, reward, terminal, info = env.step(action_id)
 
         if do_training:  
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
     num_eval_episodes = 5   # evaluate on 5 episodes
     eval_cycle = 20         # evaluate every 10 episodes
-    num_episodes = 200
+    num_episodes = 150
 
     # You find information about cartpole in 
     # https://github.com/openai/gym/wiki/CartPole-v0

@@ -11,7 +11,7 @@ from agent.networks import CNN
 from tensorboard_evaluation import *
 from utils import EpisodeStats
 
-def run_episode(env, agent, deterministic, skip_frames=0,  do_training=True, rendering=True, max_timesteps=1000, history_length=0):
+def run_episode(env, agent, deterministic, skip_frames=2,  do_training=True, rendering=True, max_timesteps=1000, history_length=0):
     """
     This methods runs one episode for a gym environment. 
     deterministic == True => agent executes only greedy actions according the Q function approximator (no random actions).
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     # ...
     Q = CNN(history_length=hl + 1, n_classes=num_actions)
     Q_target = CNN(history_length=hl + 1, n_classes=num_actions)
-    agent = DQNAgent(Q, Q_target, num_actions, gamma=0.95, batch_size=32, epsilon=0.1, tau=0.01, lr=1e-4)
+    agent = DQNAgent(Q, Q_target, num_actions, gamma=0.95, batch_size=32, epsilon=0.2, tau=0.01, lr=1e-4)
     fn = os.path.join(model_dir, 'dqn_agent.ckpt')
     if os.path.exists(fn):
         agent.load(fn)

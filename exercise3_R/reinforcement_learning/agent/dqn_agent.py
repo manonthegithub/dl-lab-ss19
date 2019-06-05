@@ -122,7 +122,7 @@ class DQNAgent:
             # You can sample the agents actions with different probabilities (need to sum up to 1) so that the agent will prefer to accelerate or going straight.
             # To see how the agent explores, turn the rendering in the training on and look what the agent is doing.
             action_id = np.random.choice(range(self.num_actions), p=p)
-            mult = r
+            mult = 1
 
         return action_id, mult
 
@@ -131,5 +131,5 @@ class DQNAgent:
         return file_name
 
     def load(self, file_name):
-        self.Q.load_state_dict(torch.load(file_name))
-        self.Q_target.load_state_dict(torch.load(file_name))
+        self.Q.load_state_dict(torch.load(file_name, map_location=DEVICE))
+        self.Q_target.load_state_dict(torch.load(file_name, map_location=DEVICE))
