@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.optim as optim
+import torch.nn.functional as F
 from agent.replay_buffer import ReplayBuffer
 
 if torch.cuda.device_count() > 0:
@@ -72,7 +73,7 @@ class DQNAgent:
         vs = self.Q_target(batch_next_states)
         if len(vs.shape) == 2:
             a = vs.max(dim=1)[0]
-            td_target = batch_rewards + self.gamma * a * batch_dones
+            td_target = (batch_rewards + self.gamma * a) * batch_dones
             out = self.Q(batch_states)[range(batch_actions.shape[0]), batch_actions]
         else:
             a = vs[:, vs.shape[1] - 1, :].max(dim=1)[0]
@@ -111,16 +112,19 @@ class DQNAgent:
             vs = self.Q(state)
             if (len(vs.shape)) == 2:
                 action_id = vs.argmax(dim=1)[0].item()
+                mult = F.softmax(vs, dim=1).max(dim=1)[0][0].item()
             else:
                 action_id = vs.argmax(dim=2)[0][vs.shape[1] - 1].item()
-
+                mult = F.softmax(vs, dim=2).max(dim=2)[0][0][vs.shape[1] - 1].item()
         else:
             # TODO: sample random action
             # Hint for the exploration in CarRacing: sampling the action from a uniform distribution will probably not work. 
             # You can sample the agents actions with different probabilities (need to sum up to 1) so that the agent will prefer to accelerate or going straight.
             # To see how the agent explores, turn the rendering in the training on and look what the agent is doing.
             action_id = np.random.choice(range(self.num_actions), p=p)
-        return action_id
+            mult = r
+
+        return action_id, mult
 
     def save(self, file_name):
         torch.save(self.Q.state_dict(), file_name)
