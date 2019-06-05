@@ -7,7 +7,7 @@ from agent.networks import *
 import numpy as np
 import os
 import json
-import datetime
+import datetime.datetime as datetime
 
 np.random.seed(0)
 
