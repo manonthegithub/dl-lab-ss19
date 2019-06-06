@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     # TODO: load agent
     agent = BCAgent(torch.device('cpu'), lr=0.0001, history_length=hl)
-    agent.load("models/agent.pt")
+    agent.load("models/agent_10_best.pt")
 
     env = gym.make('CarRacing-v0').unwrapped
 
